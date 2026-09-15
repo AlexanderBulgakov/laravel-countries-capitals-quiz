@@ -40,7 +40,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-laravel}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-laravel}"]
       interval: 5s
