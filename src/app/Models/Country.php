@@ -12,6 +12,17 @@ class Country extends Model
     /** @use HasFactory<CountryFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'restcountries_uuid',
+        'cca3',
+        'name_common',
+        'name_official',
+        'region',
+        'continents',
+        'descriptions_short',
+        'flag_url',
+    ];
+    
     protected function casts(): array
     {
         return [

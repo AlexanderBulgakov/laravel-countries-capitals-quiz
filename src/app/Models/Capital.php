@@ -12,6 +12,8 @@ class Capital extends Model
     /** @use HasFactory<CapitalFactory> */
     use HasFactory;
 
+    protected $fillable = ['country_id', 'name'];
+    
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);

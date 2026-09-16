@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'restcountries' => [
+        'key' => env('RESTCOUNTRIES_API_KEY'),
+        'base_url' => env('RESTCOUNTRIES_BASE_URL', 'https://api.restcountries.com/countries/v5'),
+    ],
+
 ];
