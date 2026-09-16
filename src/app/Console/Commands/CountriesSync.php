@@ -15,10 +15,15 @@ use Illuminate\Console\Attributes\Signature;
 #[Description('Sync countries and capitals from the REST Countries API')]
 class CountriesSync extends Command
 {
+    // Maximum page size on the REST Countries free tier (100; paid plans allow up to 500) —
+    // using the max keeps the number of requests (and rate-limit exposure) as low as possible.
     private const PAGE_LIMIT = 100;
 
     /**
-     * Execute the console command.
+     * Fetches countries page by page (REST Countries v5 paginates all responses)
+     * and upserts them. Aborts on the first failed page rather than skipping it,
+     * so a partial API outage never leaves the database in a half-synced state —
+     * whatever was already committed on prior pages stays untouched.
      */
     public function handle(): int
     {
@@ -29,6 +34,8 @@ class CountriesSync extends Command
 
         do {
             try {
+                // retry() alone only retries connection-level failures; throw() converts
+                // non-2xx responses into exceptions too, so retry() catches those as well.
                 $response = Http::withToken(config('services.restcountries.key'))
                     ->retry(3, 500)
                     ->throw()
@@ -73,6 +80,12 @@ class CountriesSync extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * Matched by restcountries_uuid, not cca3 (ISO alpha-3 code): the latter
+     * isn't guaranteed non-empty/unique across all API entries, while uuid is
+     * REST Countries' own internal identifier — always present, guaranteed
+     * unique by construction.
+     */
     private function syncCountry(array $data): Country
     {
         $country = Country::updateOrCreate(
