@@ -1,9 +1,25 @@
-# laravel-docker
+# Countries & Capitals Quiz
 
-Minimal Docker setup for local Laravel development: `app` (PHP-FPM), `nginx`,
-`db` (PostgreSQL), `valkey`.
+A country/capital guessing quiz built with Laravel — global leaderboard,
+increasing difficulty levels, live weather and currency data for capitals.
+Portfolio project focused on backend fundamentals: external API sync, queues
+and scheduling, caching, and tests.
 
-## Usage
+![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
+![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
+
+> 🚧 **Work in progress.** Being built in phases (data model → quiz → auth →
+> leaderboard → external data → API layer). Not feature-complete yet — see
+> commit history for current progress.
+
+## Tech stack
+
+- Laravel (PHP 8.4), PostgreSQL, Valkey (Redis-protocol compatible) for cache/queues/sessions
+- Docker Compose for local development
+- Pest for tests, Pint + Larastan for code style and static analysis
+- GitHub Actions CI
+
+## Getting started
 
 1. Copy the environment example:
 
@@ -24,7 +40,7 @@ Minimal Docker setup for local Laravel development: `app` (PHP-FPM), `nginx`,
 
 3. Open <http://localhost> (port configurable via `APP_PORT` in `.env`).
 
-## Layout
+## Project structure
 
 - `docker-compose.yml` — `app`, `nginx`, `db` (PostgreSQL), `valkey` (Redis-protocol
   compatible, BSD-licensed — Laravel still uses the `redis` driver/client).
