@@ -22,13 +22,27 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!--
+            docker-compose.yml sets CACHE_STORE/DB_DATABASE/QUEUE_CONNECTION/
+            SESSION_DRIVER as real container environment variables for the
+            app service, which take precedence over a plain (non-forced)
+            <env> here or over .env. Both <env force="true"> (fixes getenv()/
+            $_ENV) AND <server> (fixes $_SERVER) are required: Laravel's
+            env() helper goes through phpdotenv, whose adapter chain checks
+            $_SERVER *before* $_ENV/getenv() — so without the matching
+            <server> entry, env() still returns Docker's stale value even
+            though getenv() itself was already correctly overridden.
+        -->
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <server name="CACHE_STORE" value="array"/>
+        <env name="DB_DATABASE" value="laravel_testing" force="true"/>
+        <server name="DB_DATABASE" value="laravel_testing"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <server name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
