@@ -4,12 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\Capital;
 use App\Models\Country;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
 
 #[Signature('countries:sync')]
 #[Description('Sync countries and capitals from the REST Countries API')]
@@ -42,7 +42,7 @@ class CountriesSync extends Command
                     ->get(config('services.restcountries.base_url'), [
                         'limit' => self::PAGE_LIMIT,
                         'offset' => $offset,
-                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals'
+                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals',
                     ]);
             } catch (RequestException $e) {
                 Log::error('countries:sync: failed to fetch page', [
