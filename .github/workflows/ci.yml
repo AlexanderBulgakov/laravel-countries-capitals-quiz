@@ -13,6 +13,14 @@ jobs:
       run:
         working-directory: src
 
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+
     services:
       postgres:
         image: postgres:18-alpine
@@ -43,11 +51,5 @@ jobs:
 
       - run: ./vendor/bin/pint --test
       - run: ./vendor/bin/phpstan analyse
+      - run: php artisan migrate --force
       - run: php artisan test
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: laravel
-          DB_USERNAME: laravel
-          DB_PASSWORD: secret
