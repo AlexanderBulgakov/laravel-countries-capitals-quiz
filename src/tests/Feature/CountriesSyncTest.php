@@ -7,9 +7,11 @@ use Illuminate\Support\Str;
 
 afterEach(function () {
     // Guarantees test fixtures are cleaned up even if an assertion fails —
-    // 'Antarctica' is used as a marker value that never occurs among real
-    // REST Countries data, so it's safe to delete by this field alone.
-    Country::where('region', 'Antarctica')->delete();
+    // '__TEST__' is used as a marker value that can never collide with a
+    // real region name (unlike a plausible-looking placeholder such as
+    // 'Antarctica', which turned out to be close to a real REST Countries
+    // value), so it's safe to delete by this field alone.
+    Country::where('region', '__TEST__')->delete();
 });
 
 it('syncs countries and their capitals from the API', function () {
@@ -25,8 +27,8 @@ it('syncs countries and their capitals from the API', function () {
                         'common' => 'Test Country',
                         'official' => 'Test Country Official',
                     ],
-                    'region' => 'Antarctica',
-                    'continents' => ['Antarctica'],
+                    'region' => '__TEST__',
+                    'continents' => ['__TEST__'],
                     'descriptions' => [
                         'short' => 'A fixture, not a real country.',
                     ],
@@ -64,8 +66,8 @@ it('is idempotent — running sync twice updates instead of duplicating', functi
                         'common' => $commonName,
                         'official' => 'Test Country Official',
                     ],
-                    'region' => 'Antarctica',
-                    'continents' => ['Antarctica'],
+                    'region' => '__TEST__',
+                    'continents' => ['__TEST__'],
                     'descriptions' => ['short' => 'A fixture, not a real country.'],
                     'flag' => ['url_svg' => 'https://example.test/flag.svg'],
                     'capitals' => [
