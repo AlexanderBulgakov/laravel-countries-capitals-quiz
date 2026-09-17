@@ -5,15 +5,6 @@ use App\Models\Country;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-afterEach(function () {
-    // Guarantees test fixtures are cleaned up even if an assertion fails —
-    // '__TEST__' is used as a marker value that can never collide with a
-    // real region name (unlike a plausible-looking placeholder such as
-    // 'Antarctica', which turned out to be close to a real REST Countries
-    // value), so it's safe to delete by this field alone.
-    Country::where('region', '__TEST__')->delete();
-});
-
 it('syncs countries and their capitals from the API', function () {
     $uuid = (string) Str::uuid();
 
@@ -22,20 +13,20 @@ it('syncs countries and their capitals from the API', function () {
             'data' => [
                 'objects' => [[
                     'uuid' => $uuid,
-                    'codes' => ['alpha_3' => 'ZZZ'],
+                    'codes' => ['alpha_3' => 'ZAF'],
                     'names' => [
-                        'common' => 'Test Country',
-                        'official' => 'Test Country Official',
+                        'common' => 'South Africa',
+                        'official' => 'Republic of South Africa',
                     ],
-                    'region' => '__TEST__',
-                    'continents' => ['__TEST__'],
+                    'region' => 'Africa',
+                    'continents' => ['Africa'],
                     'descriptions' => [
-                        'short' => 'A fixture, not a real country.',
+                        'short' => 'A republic at the southern tip of Africa.',
                     ],
                     'flag' => ['url_svg' => 'https://example.test/flag.svg'],
                     'capitals' => [
-                        ['name' => 'Testopolis'],
-                        ['name' => 'Testopolis2'],
+                        ['name' => 'Pretoria'],
+                        ['name' => 'Cape Town'],
                     ],
                 ]],
                 'meta' => ['total' => 1, 'count' => 1, 'limit' => 100, 'offset' => 0, 'more' => false],
@@ -48,9 +39,9 @@ it('syncs countries and their capitals from the API', function () {
     $country = Country::where('restcountries_uuid', $uuid)->first();
 
     expect($country)->not->toBeNull();
-    expect($country->cca3)->toBe('ZZZ');
+    expect($country->cca3)->toBe('ZAF');
     expect($country->capitals)->toHaveCount(2);
-    expect($country->capitals->pluck('name'))->toContain('Testopolis', 'Testopolis2');
+    expect($country->capitals->pluck('name'))->toContain('Pretoria', 'Cape Town');
 });
 
 it('is idempotent — running sync twice updates instead of duplicating', function () {
@@ -61,18 +52,18 @@ it('is idempotent — running sync twice updates instead of duplicating', functi
             'objects' => [
                 [
                     'uuid' => $uuid,
-                    'codes' => ['alpha_3' => 'ZZZ'],
+                    'codes' => ['alpha_3' => 'ZAF'],
                     'names' => [
                         'common' => $commonName,
-                        'official' => 'Test Country Official',
+                        'official' => 'Republic of South Africa',
                     ],
-                    'region' => '__TEST__',
-                    'continents' => ['__TEST__'],
-                    'descriptions' => ['short' => 'A fixture, not a real country.'],
+                    'region' => 'Africa',
+                    'continents' => ['Africa'],
+                    'descriptions' => ['short' => 'A republic at the southern tip of Africa.'],
                     'flag' => ['url_svg' => 'https://example.test/flag.svg'],
                     'capitals' => [
-                        ['name' => 'Testopolis'],
-                        ['name' => 'Testopolis2'],
+                        ['name' => 'Pretoria'],
+                        ['name' => 'Cape Town'],
                     ],
                 ],
             ],
@@ -82,8 +73,8 @@ it('is idempotent — running sync twice updates instead of duplicating', functi
 
     Http::fake([
         'api.restcountries.com/*' => Http::sequence()
-            ->push($fixture('Test Country'), 200)
-            ->push($fixture('Test Country (updated)'), 200),
+            ->push($fixture('South Africa'), 200)
+            ->push($fixture('South Africa (updated)'), 200),
     ]);
 
     $this->artisan('countries:sync');
@@ -93,5 +84,5 @@ it('is idempotent — running sync twice updates instead of duplicating', functi
 
     expect(Country::where('restcountries_uuid', $uuid)->count())->toBe(1);
     expect(Capital::where('country_id', $country->id)->count())->toBe(2);
-    expect($country->name_common)->toBe('Test Country (updated)');
+    expect($country->name_common)->toBe('South Africa (updated)');
 });
