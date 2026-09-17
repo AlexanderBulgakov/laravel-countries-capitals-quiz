@@ -40,6 +40,21 @@ and scheduling, caching, and tests.
 
 3. Open <http://localhost> (port configurable via `APP_PORT` in `.env`).
 
+## Running tests
+
+Tests run against a separate `laravel_testing` database (on the same `db`
+Postgres server) so they never touch real local data. Create it once:
+
+```
+docker compose exec db createdb -U laravel laravel_testing
+```
+
+Then run tests as usual:
+
+```
+docker compose exec app php artisan test
+```
+
 ## Project structure
 
 - `docker-compose.yml` — `app`, `nginx`, `db` (PostgreSQL), `valkey` (Redis-protocol
