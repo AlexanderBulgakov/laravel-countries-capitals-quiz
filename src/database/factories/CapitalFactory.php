@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Capital;
+use App\Models\Country;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +19,8 @@ class CapitalFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'country_id' => Country::factory(),
+            'name' => fake()->city(),
         ];
     }
 }
