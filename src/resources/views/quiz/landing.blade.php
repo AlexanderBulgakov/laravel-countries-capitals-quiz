@@ -1,10 +1,7 @@
 <x-layout title="Quiz">
     <h1 class="mb-6 text-2xl font-semibold">Countries & Capitals Quiz</h1>
 
-    <p class="mb-6 text-gray-600">
-        Answer as many questions as you can — one wrong answer or running out
-        of time ends the round.
-    </p>
+    <p class="mb-6 text-gray-600">Answer as many questions as you can — one wrong answer or running out of time ends the round.</p>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         @foreach ($modes as $mode)
