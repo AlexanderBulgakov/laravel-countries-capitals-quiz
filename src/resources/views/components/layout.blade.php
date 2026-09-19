@@ -18,6 +18,109 @@
     @endif
 </head>
 <body class="bg-gray-50 text-gray-700">
+    <header class="border-b border-gray-300 bg-white" x-data="{ open: false }">
+        <div
+            class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:grid sm:grid-cols-3"
+        >
+            <a
+                href="{{ route('home') }}"
+                class="flex items-center gap-2 font-semibold text-gray-900"
+            >
+                <span aria-hidden="true">🌍</span>
+                Quiz
+            </a>
+
+            <nav
+                class="hidden justify-center gap-6 text-sm font-medium text-gray-600 sm:flex"
+            >
+                <a href="{{ route('home') }}" class="hover:text-gray-900"
+                    >Home</a
+                >
+                <a
+                    href="{{ route('countries.index') }}"
+                    class="hover:text-gray-900"
+                    >Countries</a
+                >
+                <a
+                    href="{{ route('quiz.landing') }}"
+                    class="hover:text-gray-900"
+                    >Quiz</a
+                >
+            </nav>
+
+            <div
+                class="hidden items-center justify-end gap-4 text-sm font-medium sm:flex"
+            >
+                {{-- TODO: point at real routes once Breeze/Fortify is installed --}}
+                <a href="#" class="text-gray-600 hover:text-gray-900">Log in</a>
+                <a
+                    href="#"
+                    class="rounded-md bg-gray-900 px-3 py-1.5 text-white hover:opacity-90"
+                    >Register</a
+                >
+            </div>
+
+            <button
+                type="button"
+                @click="open = !open"
+                :aria-expanded="open"
+                aria-label="Toggle menu"
+                class="text-gray-600 sm:hidden"
+            >
+                <svg x-show="
+                        !open
+                    " class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg x-show="
+                        open
+                    " x-cloak class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div x-show="open" x-cloak class="border-t border-gray-300 sm:hidden">
+            <nav
+                class="flex flex-col gap-1 px-4 py-3 text-sm font-medium text-gray-600"
+            >
+                <a href="{{ route('home') }}" class="py-2 hover:text-gray-900"
+                    >Home</a
+                >
+                <a
+                    href="{{ route('countries.index') }}"
+                    class="py-2 hover:text-gray-900"
+                    >Countries</a
+                >
+                <a
+                    href="{{ route('quiz.landing') }}"
+                    class="py-2 hover:text-gray-900"
+                    >Quiz</a
+                >
+                <hr class="my-2 border-gray-200" />
+                {{-- TODO: point at real routes once Breeze/Fortify is installed --}}
+                <a href="#" class="py-2 hover:text-gray-900">Log in</a>
+                <a href="#" class="py-2 font-semibold text-gray-900"
+                    >Register</a
+                >
+            </nav>
+        </div>
+    </header>
+
     <main class="mx-auto max-w-6xl px-4 py-8">{{ $slot }}</main>
+
+    <footer class="border-t border-gray-300 bg-white">
+        <div
+            class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4"
+        >
+            <a
+                href="{{ route('home') }}"
+                class="flex items-center gap-2 font-semibold text-gray-900"
+            >
+                <span aria-hidden="true">🌍</span>
+                Quiz
+            </a>
+        </div>
+    </footer>
 </body>
 </html>
