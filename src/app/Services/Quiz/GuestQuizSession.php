@@ -3,6 +3,7 @@
 namespace App\Services\Quiz;
 
 use App\Enums\QuizMode;
+use App\Enums\QuizOutcome;
 
 /**
  * Tracks an in-progress quiz attempt via the session. Despite the name,
@@ -11,6 +12,7 @@ use App\Enums\QuizMode;
 class GuestQuizSession
 {
     private const TOTAL_QUESTIONS = 10;
+
     private const DURATION_SECONDS = 15;
 
     public function __construct(private QuestionGenerator $generator) {}
@@ -24,6 +26,7 @@ class GuestQuizSession
             'total_questions' => self::TOTAL_QUESTIONS,
             'question_number' => 1,
             'score' => 0,
+            'used_country_ids' => [$question->targetCountryId],
             'pending' => [
                 'target_country_id' => $question->targetCountryId,
                 'option_country_ids' => $question->optionCountryIds,
@@ -54,14 +57,85 @@ class GuestQuizSession
 
     public function submitAnswer(?int $selectedCountryId): AnswerResult
     {
-        // TODO
+        $state = session('quiz');
+        $pending = $state['pending'];
+
+        $expired = now()->timestamp - $pending['question_started_at'] >= self::DURATION_SECONDS;
+        $validOption = ! is_null($selectedCountryId)
+            && in_array($selectedCountryId, $pending['option_country_ids'], true);
+        $correct = ! $expired && $validOption && $selectedCountryId === $pending['target_country_id'];
+
+        if (! $correct) {
+            return $this->finishAttempt(
+                state: $state,
+                pending: $pending,
+                outcome: $expired ? QuizOutcome::Timeout : QuizOutcome::Failed,
+                correct: false
+            );
+        }
+
+        $score = $state['score'] + 1;
+
+        if ($state['total_questions'] < $state['question_number'] + 1) {
+            return $this->finishAttempt(
+                state: [...$state, 'score' => $score],
+                pending: $pending,
+                outcome: QuizOutcome::Completed,
+                correct: true
+            );
+        }
+
+        return $this->continueAttempt(
+            state: $state,
+            pending: $pending,
+            score: $score
+        );
+    }
+
+    private function finishAttempt(array $state, array $pending, QuizOutcome $outcome, bool $correct): AnswerResult
+    {
+        session(['quiz' => [
+            ...$state,
+            'pending' => null,
+            'last_result' => [
+                'outcome' => $outcome->value,
+                'score' => $state['score'],
+                'stopped_at_question' => $state['question_number'],
+            ],
+        ]]);
+
         return new AnswerResult(
-            correct: false,
-            correctCountryId: 1,
-            score: 1,
+            correct: $correct,
+            correctCountryId: $pending['target_country_id'],
+            score: $state['score'],
+            finished: true,
+            outcome: $outcome,
+        );
+    }
+
+    private function continueAttempt(array $state, array $pending, int $score): AnswerResult
+    {
+        $mode = QuizMode::from($state['mode']);
+        $nextQuestion = $this->generator->generate($mode, $state['used_country_ids']);
+
+        session(['quiz' => [
+            ...$state,
+            'question_number' => $state['question_number'] + 1,
+            'score' => $score,
+            'used_country_ids' => [...$state['used_country_ids'], $nextQuestion->targetCountryId],
+            'pending' => [
+                'target_country_id' => $nextQuestion->targetCountryId,
+                'option_country_ids' => $nextQuestion->optionCountryIds,
+                'question_started_at' => now()->timestamp,
+            ],
+        ]]);
+
+        return new AnswerResult(
+            correct: true,
+            correctCountryId: $pending['target_country_id'],
+            score: $score,
             finished: false,
-            outcome: null,
-            nextQuestion: null
+            nextQuestion: $nextQuestion,
         );
     }
 
