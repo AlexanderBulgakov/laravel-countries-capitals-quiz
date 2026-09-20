@@ -22,14 +22,15 @@
         <div
             class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:grid sm:grid-cols-3"
         >
-            <a
-                href="{{ route('home') }}"
-                class="flex items-center gap-2 font-semibold text-gray-900"
-            >
-                <span aria-hidden="true">🌍</span>
-                Quiz
-            </a>
-
+            <div>
+                <a
+                    href="{{ route('home') }}"
+                    class="font-semibold text-gray-900"
+                >
+                    <span aria-hidden="true">🌍</span>
+                    Quiz
+                </a>
+            </div>
             <nav
                 class="hidden justify-center gap-6 text-sm font-medium text-gray-600 sm:flex"
             >
@@ -67,14 +68,23 @@
                 aria-label="Toggle menu"
                 class="text-gray-600 sm:hidden"
             >
-                <svg x-show="
-                        !open
-                    " class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                    x-show="!open"
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <svg x-show="
-                        open
-                    " x-cloak class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                    x-show="open"
+                    x-cloak
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
