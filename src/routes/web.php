@@ -12,7 +12,6 @@ Route::get('/countries', [CountryController::class, 'index'])->name('countries.i
 
 Route::prefix('quiz')->name('quiz.')->group(function () {
     Route::get('/', [QuizController::class, 'landing'])->name('landing');
-    Route::get('/question', [QuizController::class, 'question'])->name('question');
     Route::get('/results', [QuizController::class, 'results'])->name('results');
     Route::post('/answer', [QuizController::class, 'answer'])->name('answer');
     Route::get('/{mode}', [QuizController::class, 'start'])->name('start');

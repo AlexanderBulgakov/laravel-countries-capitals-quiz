@@ -28,14 +28,24 @@ class QuizController extends Controller
         return view('quiz.play', $this->present($question));
     }
 
-    public function question()
+    public function answer(Request $request, GuestQuizSession $quizSession)
     {
-        // TODO
-    }
+        if (! $quizSession->current()) {
+            return response()->json(['error' => 'no_active_quiz'], 409);
+        }
 
-    public function answer(Request $request)
-    {
-        // TODO
+        $optionId = $request->filled('option_id') ? $request->integer('option_id') : null;
+
+        $result = $quizSession->submitAnswer($optionId);
+
+        return response()->json([
+            'correct' => $result->correct,
+            'correct_country_id' => $result->correctCountryId,
+            'score' => $result->score,
+            'finished' => $result->finished,
+            'outcome' => $result->outcome?->value,
+            'next_question' => $result->nextQuestion ? $this->present($result->nextQuestion) : null,
+        ]);
     }
 
     public function results()
