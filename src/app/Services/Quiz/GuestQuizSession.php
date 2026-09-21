@@ -13,7 +13,12 @@ class GuestQuizSession
 {
     private const TOTAL_QUESTIONS = 10;
 
-    private const DURATION_SECONDS = 15;
+    // 15 "visible" seconds for the answer + 1 second hidden behind the loader
+    // (the first question — the initial loader; subsequent questions — the result
+    // display delay). Subtracting these 1 second from the displayed counter is
+    // handled entirely on the JS side (resources/js/app.js); question_started_at
+    // is not adjusted here.
+    private const DURATION_SECONDS = 16;
 
     public function __construct(private QuestionGenerator $generator) {}
 
@@ -98,6 +103,11 @@ class GuestQuizSession
             ...$state,
             'pending' => null,
             'last_result' => [
+                // Duplicated from $state['mode'] (already preserved by the spread
+                // above) so lastResult() returns one self-contained snapshot for
+                // the results page, instead of the controller having to read
+                // session('quiz.mode') separately.
+                'mode' => $state['mode'],
                 'outcome' => $outcome->value,
                 'score' => $state['score'],
                 'stopped_at_question' => $state['question_number'],
@@ -151,5 +161,20 @@ class GuestQuizSession
     public function lastResult(): ?array
     {
         return session('quiz.last_result');
+    }
+
+    public function score(): int
+    {
+        return session('quiz.score', 0);
+    }
+
+    public function questionNumber(): int
+    {
+        return session('quiz.question_number', 1);
+    }
+
+    public function totalQuestions(): int
+    {
+        return self::TOTAL_QUESTIONS;
     }
 }

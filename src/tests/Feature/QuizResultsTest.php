@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 
 it('redirects to the landing page when there is no result to show', function () {
@@ -9,6 +10,7 @@ it('redirects to the landing page when there is no result to show', function () 
 
 it('shows the completed message', function () {
     session(['quiz' => ['last_result' => [
+        'mode' => QuizMode::CountryToCapital->value,
         'outcome' => QuizOutcome::Completed->value,
         'score' => 10,
         'stopped_at_question' => 10,
