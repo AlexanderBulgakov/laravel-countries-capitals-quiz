@@ -141,8 +141,11 @@ class GuestQuizSession
 
     public function remainingSeconds(): int
     {
-        // TODO
-        return 1;
+        $pending = session('quiz.pending');
+
+        $elapsed = now()->timestamp - $pending['question_started_at'];
+
+        return max(0, self::DURATION_SECONDS - $elapsed);
     }
 
     public function lastResult(): ?array
