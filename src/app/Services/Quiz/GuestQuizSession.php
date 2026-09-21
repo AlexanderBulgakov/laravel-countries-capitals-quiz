@@ -150,7 +150,6 @@ class GuestQuizSession
 
     public function lastResult(): ?array
     {
-        // TODO
-        return null;
+        return session('quiz.last_result');
     }
 }

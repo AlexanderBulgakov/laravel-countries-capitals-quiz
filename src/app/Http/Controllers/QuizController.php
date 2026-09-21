@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\QuizMode;
+use App\Enums\QuizOutcome;
 use App\Models\Country;
 use App\Services\Quiz\GeneratedQuestion;
 use App\Services\Quiz\GuestQuizSession;
@@ -48,9 +49,25 @@ class QuizController extends Controller
         ]);
     }
 
-    public function results()
+    public function results(GuestQuizSession $quizSession)
     {
-        // TODO
+        $lastResult = $quizSession->lastResult();
+
+        if (! $lastResult) {
+            return redirect()->route('quiz.landing');
+        }
+
+        $outcome = QuizOutcome::from($lastResult['outcome']);
+
+        return view('quiz.results', [
+            'heading' => match ($outcome) {
+                QuizOutcome::Completed => 'You completed the quiz!',
+                QuizOutcome::Failed => 'Wrong answer — game over.',
+                QuizOutcome::Timeout => "Time's up — game over.",
+            },
+            'score' => $lastResult['score'],
+            'stoppedAtQuestion' => $lastResult['stopped_at_question'],
+        ]);
     }
 
     private function present(GeneratedQuestion $question): array
