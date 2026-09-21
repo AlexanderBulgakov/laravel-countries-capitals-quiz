@@ -2,19 +2,25 @@
 
 A country/capital guessing quiz built with Laravel — global leaderboard,
 increasing difficulty levels, live weather and currency data for capitals.
-Portfolio project focused on backend fundamentals: external API sync, queues
-and scheduling, caching, and tests.
+A learning/portfolio project focused on backend fundamentals: external API
+sync, queues and scheduling, caching, and tests.
 
 ![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> 🚧 **Work in progress.** Being built in phases (data model → quiz → auth →
-> leaderboard → external data → API layer). Not feature-complete yet — see
-> commit history for current progress.
+> 🚧 **Work in progress.** 2/10 phases complete. Not feature-complete yet —
+> see commit history for current progress.
+
+The guest quiz is already playable end to end: pick "guess the capital" or
+"guess the country", answer against a per-question timer, sudden-death
+scoring (any wrong answer or timeout ends the run), and a results screen.
+Auth, leaderboard, difficulty levels and external data (weather/currency)
+are not built yet.
 
 ## Tech stack
 
 - Laravel (PHP 8.4), PostgreSQL, Valkey (Redis-protocol compatible) for cache/queues/sessions
+- Blade + Alpine.js for frontend interactivity, Tailwind CSS for styling
 - Docker Compose for local development
 - Pest for tests, Pint + Larastan for code style and static analysis
 - GitHub Actions CI
