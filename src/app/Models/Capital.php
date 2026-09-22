@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Some countries have more than one capital (e.g. South Africa has
  * separate administrative, legislative and judicial capitals) — hence
  * this being its own table rather than a column on Country.
+ *
+ * @property int $id
+ * @property string $name
  */
 class Capital extends Model
 {
