@@ -17,6 +17,14 @@ scoring (any wrong answer or timeout ends the run), and a results screen.
 Auth, leaderboard, difficulty levels and external data (weather/currency)
 are not built yet.
 
+**Development approach:** built with Claude Code as a pairing/mentoring
+tool. Most implementation code started as a solution proposed by Claude in
+conversation; I read, tested, and integrated it myself — fixing issues and
+adjusting along the way. I wrote most of the test suite myself. Every
+architectural decision (session design, sudden-death rules, timer
+handling, etc.) was discussed and reasoned through, not accepted blindly —
+I can explain and defend any part of this codebase.
+
 ## Tech stack
 
 - Laravel (PHP 8.4), PostgreSQL, Valkey (Redis-protocol compatible) for cache/queues/sessions
