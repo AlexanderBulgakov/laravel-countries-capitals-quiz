@@ -1,8 +1,8 @@
 <?php
 
 use App\Enums\QuizMode;
-use App\Models\Country;
 use App\Models\Capital;
+use App\Models\Country;
 
 it('resumes the same question on repeated visits (simulating a page refresh)', function () {
     Country::factory()
