@@ -9,3 +9,9 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 }
+
+/* Alpine hides x-cloak elements only after it boots — without this rule
+   they'd flash visible for a moment on page load. */
+[x-cloak] {
+    display: none !important;
+}

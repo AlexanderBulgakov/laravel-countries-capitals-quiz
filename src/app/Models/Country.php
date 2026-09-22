@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\CountryFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Matched during sync by restcountries_uuid, not cca3 — the ISO code isn't
  * guaranteed to be present/unique for every entry, while the API's own
  * uuid is guaranteed present and unique by construction.
+ *
+ * @property int $id
+ * @property string $name_common
+ * @property-read Collection<int, Capital> $capitals
  */
 class Country extends Model
 {
