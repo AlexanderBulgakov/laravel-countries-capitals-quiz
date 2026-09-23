@@ -53,10 +53,9 @@
             <div
                 class="hidden items-center justify-end gap-4 text-sm font-medium sm:flex"
             >
-                {{-- TODO: point at real routes once Breeze/Fortify is installed --}}
-                <a href="#" class="text-gray-600 hover:text-gray-900">Log in</a>
+                <a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900">Log in</a>
                 <a
-                    href="#"
+                    href="{{ route('register') }}"
                     class="rounded-md bg-gray-900 px-3 py-1.5 text-white hover:opacity-90"
                     >Register</a
                 >
@@ -109,9 +108,8 @@
                     >Quiz</a
                 >
                 <hr class="my-2 border-gray-200" />
-                {{-- TODO: point at real routes once Breeze/Fortify is installed --}}
-                <a href="#" class="py-2 hover:text-gray-900">Log in</a>
-                <a href="#" class="py-2 font-semibold text-gray-900"
+                <a href="{{ route('login') }}" class="py-2 hover:text-gray-900">Log in</a>
+                <a href="{{ route('register') }}" class="py-2 font-semibold text-gray-900"
                     >Register</a
                 >
             </nav>
