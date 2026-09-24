@@ -20,6 +20,8 @@ class QuizAttempt extends Model
     protected $casts = [
         'mode' => QuizMode::class,
         'outcome' => QuizOutcome::class,
+        'score' => 'integer',
+        'stopped_at_question' => 'integer',
     ];
 
     public function user(): BelongsTo
