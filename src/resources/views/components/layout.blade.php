@@ -70,6 +70,10 @@
                                     {{ __('Dashboard') }}
                                 </x-dropdown-link>
 
+                                <x-dropdown-link :href="route('quiz.attempts')">
+                                    {{ __('My attempts') }}
+                                </x-dropdown-link>
+
                                 <x-dropdown-link :href="route('profile.edit')">
                                     {{ __('Profile') }}
                                 </x-dropdown-link>
@@ -152,6 +156,10 @@
                     @auth
                         <x-responsive-nav-link :href="route('dashboard')">
                             {{ __('Dashboard') }}
+                        </x-responsive-nav-link>
+
+                        <x-responsive-nav-link :href="route('quiz.attempts')">
+                            {{ __('My attempts') }}
                         </x-responsive-nav-link>
 
                         <x-responsive-nav-link :href="route('profile.edit')">

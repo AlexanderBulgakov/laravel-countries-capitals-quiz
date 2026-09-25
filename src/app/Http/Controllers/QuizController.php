@@ -93,11 +93,7 @@ class QuizController extends Controller
         $mode = QuizMode::from($lastResult['mode']);
 
         return view('quiz.results', [
-            'heading' => match ($outcome) {
-                QuizOutcome::Completed => 'You completed the quiz!',
-                QuizOutcome::Failed => 'Wrong answer — game over.',
-                QuizOutcome::Timeout => "Time's up — game over.",
-            },
+            'heading' => $outcome->label(),
             'score' => $lastResult['score'],
             'stoppedAtQuestion' => $lastResult['stopped_at_question'],
             'mode' => $mode,

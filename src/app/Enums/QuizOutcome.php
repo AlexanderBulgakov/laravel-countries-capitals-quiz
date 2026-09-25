@@ -13,4 +13,22 @@ enum QuizOutcome: string
     case Completed = 'completed';
     case Failed = 'failed';
     case Timeout = 'timeout';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Completed => 'You completed the quiz!',
+            self::Failed => 'Wrong answer — game over.',
+            self::Timeout => "Time's up — game over.",
+        };
+    }
+
+    public function shortLabel(): string
+    {
+        return match ($this) {
+            self::Completed => 'Completed',
+            self::Failed => 'Wrong answer',
+            self::Timeout => 'Timed out',
+        };
+    }
 }
