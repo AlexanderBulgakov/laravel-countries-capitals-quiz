@@ -8,22 +8,21 @@ sync, queues and scheduling, caching, and tests.
 ![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> 🚧 **Work in progress.** 2/10 phases complete. Not feature-complete yet —
+> 🚧 **Work in progress.** 3/10 phases complete. Not feature-complete yet —
 > see commit history for current progress.
 
 The guest quiz is already playable end to end: pick "guess the capital" or
 "guess the country", answer against a per-question timer, sudden-death
 scoring (any wrong answer or timeout ends the run), and a results screen.
-Auth, leaderboard, difficulty levels and external data (weather/currency)
-are not built yet.
+Registered users additionally get their quiz attempts saved and can browse
+a filterable history of past attempts. Leaderboard, difficulty levels and
+external data (weather/currency) are not built yet.
 
 **Development approach:** built with Claude Code as a pairing/mentoring
-tool. Most implementation code started as a solution proposed by Claude in
-conversation; I read, tested, and integrated it myself — fixing issues and
-adjusting along the way. I wrote most of the test suite myself. Every
-architectural decision (session design, sudden-death rules, timer
-handling, etc.) was discussed and reasoned through, not accepted blindly —
-I can explain and defend any part of this codebase.
+tool. The first two phases of code started as solutions proposed by Claude
+in conversation; I read, tested, and integrated them myself — fixing
+issues and adjusting along the way. Starting from the third phase, Claude
+shifted to a mentoring role — advising rather than writing code.
 
 ## Tech stack
 

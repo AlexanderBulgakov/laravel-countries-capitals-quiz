@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
+use App\Events\QuizAttemptFinished;
 use App\Models\Country;
 use App\Services\Quiz\GeneratedQuestion;
 use App\Services\Quiz\GuestQuizSession;
@@ -52,6 +53,18 @@ class QuizController extends Controller
 
         $result = $quizSession->submitAnswer($optionId);
 
+        if ($result->finished && auth()->check()) {
+            $lastResult = $quizSession->lastResult();
+
+            QuizAttemptFinished::dispatch(
+                auth()->user(),
+                QuizMode::from($lastResult['mode']),
+                QuizOutcome::from($lastResult['outcome']),
+                $lastResult['score'],
+                $lastResult['stopped_at_question'],
+            );
+        }
+
         return response()->json([
             'correct' => $result->correct,
             'correct_country_id' => $result->correctCountryId,
@@ -80,11 +93,7 @@ class QuizController extends Controller
         $mode = QuizMode::from($lastResult['mode']);
 
         return view('quiz.results', [
-            'heading' => match ($outcome) {
-                QuizOutcome::Completed => 'You completed the quiz!',
-                QuizOutcome::Failed => 'Wrong answer — game over.',
-                QuizOutcome::Timeout => "Time's up — game over.",
-            },
+            'heading' => $outcome->label(),
             'score' => $lastResult['score'],
             'stoppedAtQuestion' => $lastResult['stopped_at_question'],
             'mode' => $mode,
