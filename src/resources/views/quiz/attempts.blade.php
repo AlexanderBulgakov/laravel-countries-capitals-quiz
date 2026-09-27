@@ -1,7 +1,7 @@
 <x-layout title="My Attempts">
     <h1 class="mb-6 text-2xl font-semibold">My attempts</h1>
 
-    <form method="GET" class="mb-6 flex gap-2">
+    <form method="GET" class="mb-6 flex flex-col sm:flex-row gap-2">
         <select
             name="mode"
             class="cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
