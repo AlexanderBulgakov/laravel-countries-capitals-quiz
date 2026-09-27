@@ -44,6 +44,9 @@
                 <x-nav-link :href="route('quiz.landing')" :active="request()->routeIs('quiz.landing')">
                     {{ __('Quiz') }}
                 </x-nav-link>
+                <x-nav-link :href="route('leaderboard.index')" :active="request()->routeIs('leaderboard.index')">
+                    {{ __('Leaderboard') }}
+                </x-nav-link>
             </nav>
 
             <div
@@ -149,6 +152,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('quiz.landing')">
                     {{ __('Quiz') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('leaderboard.index')">
+                    {{ __('Leaderboard') }}
                 </x-responsive-nav-link>
 
                 @if (Route::has('login'))
