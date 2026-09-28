@@ -10,7 +10,7 @@ class LeaderboardController extends Controller
     public function index()
     {
         $rankings = DB::table('users')
-            ->leftJoin('quiz_attempts', function ($join) {
+            ->join('quiz_attempts', function ($join) {
                 $join->on('quiz_attempts.user_id', '=', 'users.id')
                     ->where('quiz_attempts.outcome', QuizOutcome::Completed->value);
             })
