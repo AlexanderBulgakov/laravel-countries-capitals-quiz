@@ -3,8 +3,9 @@
 
     <div class="overflow-x-auto rounded-md border border-gray-300 bg-white">
         @if ($userRank)
-            <div class="px-4 py-2 text-sm border-b border-gray-300">
-                Your position: <span class="font-semibold">#{{ $userRank['rank'] }}</span>
+            <div class="border-b border-gray-300 px-4 py-2 text-sm">
+                Your position:
+                <span class="font-semibold">#{{ $userRank['rank'] }}</span>
                 — {{ $userRank['completed_count'] }} completed {{ Str::plural('quiz', $userRank['completed_count']) }}
             </div>
         @endif
@@ -18,10 +19,14 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
                 @foreach ($top as $data)
-                    <tr class="{{ $userRank && $data['id'] === $userRank['id'] ? 'font-semibold' : '' }}">
+                    <tr
+                        class="{{ $userRank && $data['id'] === $userRank['id'] ? 'font-semibold' : '' }}"
+                    >
                         <td class="px-4 py-2">{{ $data['rank'] }}</td>
                         <td class="px-4 py-2">{{ $data['name'] }}</td>
-                        <td class="px-4 py-2">{{ $data['completed_count'] }}</td>
+                        <td class="px-4 py-2">
+                            {{ $data['completed_count'] }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
