@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuizAttemptsController;
 use App\Http\Controllers\QuizController;
@@ -11,6 +12,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
+
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
 Route::prefix('quiz')->name('quiz.')->group(function () {
     Route::get('/', [QuizController::class, 'landing'])->name('landing');

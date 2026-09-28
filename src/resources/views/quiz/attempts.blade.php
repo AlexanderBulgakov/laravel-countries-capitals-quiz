@@ -1,7 +1,7 @@
 <x-layout title="My Attempts">
     <h1 class="mb-6 text-2xl font-semibold">My attempts</h1>
 
-    <form method="GET" class="mb-6 flex gap-2">
+    <form method="GET" class="mb-6 flex flex-col gap-2 sm:flex-row">
         <select
             name="mode"
             class="cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
@@ -55,19 +55,25 @@
                 <tbody class="divide-y divide-gray-200">
                     @foreach ($attempts as $attempt)
                         <tr>
-                            <td class="px-4 py-2">{{ $attempt->mode->label() }}</td>
-                            <td class="px-4 py-2">{{ $attempt->outcome->shortLabel() }}</td>
+                            <td class="px-4 py-2">
+                                {{ $attempt->mode->label() }}
+                            </td>
+                            <td class="px-4 py-2">
+                                {{ $attempt->outcome->shortLabel() }}
+                            </td>
                             <td class="px-4 py-2">{{ $attempt->score }}</td>
-                            <td class="px-4 py-2">{{ $attempt->stopped_at_question }}</td>
-                            <td class="px-4 py-2">{{ $attempt->created_at->format('M j, Y H:i') }}</td>
+                            <td class="px-4 py-2">
+                                {{ $attempt->stopped_at_question }}
+                            </td>
+                            <td class="px-4 py-2">
+                                {{ $attempt->created_at->format('M j, Y H:i') }}
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-6">
-            {{ $attempts->links() }}
-        </div>
+        <div class="mt-6">{{ $attempts->links() }}</div>
     @endif
 </x-layout>
