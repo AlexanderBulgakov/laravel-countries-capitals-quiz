@@ -62,6 +62,7 @@ class QuizController extends Controller
                 QuizOutcome::from($lastResult['outcome']),
                 $lastResult['score'],
                 $lastResult['stopped_at_question'],
+                $quizSession->answers()
             );
         }
 

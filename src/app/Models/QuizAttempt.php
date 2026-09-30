@@ -7,6 +7,7 @@ use App\Enums\QuizOutcome;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuizAttempt extends Model
 {
@@ -20,12 +21,20 @@ class QuizAttempt extends Model
         'stopped_at_question',
     ];
 
-    protected $casts = [
-        'mode' => QuizMode::class,
-        'outcome' => QuizOutcome::class,
-        'score' => 'integer',
-        'stopped_at_question' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'mode' => QuizMode::class,
+            'outcome' => QuizOutcome::class,
+            'score' => 'integer',
+            'stopped_at_question' => 'integer',
+        ];
+    }
+
+    public function answers(): HasMany
+    {
+        return $this->hasMany(QuizAnswer::class)->orderBy('question_number');
+    }
 
     public function user(): BelongsTo
     {

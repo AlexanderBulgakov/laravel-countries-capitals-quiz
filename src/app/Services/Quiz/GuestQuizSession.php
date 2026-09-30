@@ -37,6 +37,7 @@ class GuestQuizSession
                 'option_country_ids' => $question->optionCountryIds,
                 'question_started_at' => now()->timestamp,
             ],
+            'answers' => [],
         ]]);
 
         return $question;
@@ -69,6 +70,13 @@ class GuestQuizSession
         $validOption = ! is_null($selectedCountryId)
             && in_array($selectedCountryId, $pending['option_country_ids'], true);
         $correct = ! $expired && $validOption && $selectedCountryId === $pending['target_country_id'];
+
+        $state['answers'][] = [
+            'question_number' => $state['question_number'],
+            'target_country_id' => $pending['target_country_id'],
+            'chosen_country_id' => ($expired || ! $validOption) ? null : $selectedCountryId,
+            'option_country_ids' => $pending['option_country_ids'],
+        ];
 
         if (! $correct) {
             return $this->finishAttempt(
@@ -176,5 +184,10 @@ class GuestQuizSession
     public function totalQuestions(): int
     {
         return self::TOTAL_QUESTIONS;
+    }
+
+    public function answers(): array
+    {
+        return session('quiz.answers', []);
     }
 }
