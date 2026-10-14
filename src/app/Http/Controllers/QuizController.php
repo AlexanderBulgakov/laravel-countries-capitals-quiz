@@ -112,20 +112,10 @@ class QuizController extends Controller
         $target = $countries[$question->targetCountryId];
 
         return [
-            'prompt' => match ($question->mode) {
-                QuizMode::CountryToCapital => $target->name_common,
-                QuizMode::CapitalToCountry => $target->capitals->first()->name,
-            },
+            'prompt' => $question->mode->promptLabel($target),
             'options' => collect($question->optionCountryIds)->map(fn ($id) => [
                 'id' => $id,
-                'label' => match ($question->mode) {
-                    // TODO: always picks the country's first capital (e.g. always Pretoria
-                    // for South Africa, never Cape Town/Bloemfontein) — a deliberate
-                    // simplification. Fix plan (pick one random capital id once at
-                    // generation time).
-                    QuizMode::CountryToCapital => $countries[$id]->capitals->first()->name,
-                    QuizMode::CapitalToCountry => $countries[$id]->name_common,
-                },
+                'label' => $question->mode->optionLabel($countries[$id]),
             ]),
         ];
     }
