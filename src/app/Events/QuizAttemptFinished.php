@@ -20,6 +20,7 @@ class QuizAttemptFinished
         public QuizMode $mode,
         public QuizOutcome $outcome,
         public int $score,
+        public int $money,
         public int $stoppedAtQuestion,
         public array $answers
     ) {}

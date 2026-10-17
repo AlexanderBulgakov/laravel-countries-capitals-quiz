@@ -11,7 +11,7 @@ use App\Enums\QuizOutcome;
  */
 class GuestQuizSession
 {
-    private const TOTAL_QUESTIONS = 10;
+    public const TOTAL_QUESTIONS = 10;
 
     // 15 "visible" seconds for the answer + 1 second hidden behind the loader
     // (the first question — the initial loader; subsequent questions — the result
@@ -119,6 +119,7 @@ class GuestQuizSession
                 'outcome' => $outcome->value,
                 'score' => $state['score'],
                 'stopped_at_question' => $state['question_number'],
+                'money' => PrizeLadder::moneyFor($state['score']),
             ],
         ]]);
 

@@ -40,6 +40,7 @@ it('stores a quiz attempt with the completed outcome', function () {
     expect($attempt->score)->toBe(10);
     expect($attempt->stopped_at_question)->toBe(10);
     expect($attempt->user_id)->toBe($this->user->id);
+    expect($attempt->money)->toBe(10_000);
 });
 
 it('stores a quiz attempt with the failed outcome', function () {
@@ -52,16 +53,19 @@ it('stores a quiz attempt with the failed outcome', function () {
 
     get(route('quiz.start', QuizMode::CountryToCapital));
 
-    $targetId = session('quiz.pending.target_country_id');
-    postJson(route('quiz.answer'), ['option_id' => $targetId]);
+    for ($i = 1; $i <= 4; $i++) {
+        postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')]);
+    }
+
     postJson(route('quiz.answer'), ['option_id' => -1]);
 
     $attempt = QuizAttempt::sole();
 
     expect($attempt->outcome)->toBe(QuizOutcome::Failed);
-    expect($attempt->score)->toBe(1);
-    expect($attempt->stopped_at_question)->toBe(2);
+    expect($attempt->score)->toBe(4);
+    expect($attempt->stopped_at_question)->toBe(5);
     expect($attempt->user_id)->toBe($this->user->id);
+    expect($attempt->money)->toBe(100);
 });
 
 it('stores a quiz attempt with the timeout outcome', function () {
@@ -84,6 +88,7 @@ it('stores a quiz attempt with the timeout outcome', function () {
     expect($attempt->score)->toBe(0);
     expect($attempt->stopped_at_question)->toBe(1);
     expect($attempt->user_id)->toBe($this->user->id);
+    expect($attempt->money)->toBe(0);
 });
 
 it('does not store a quiz attempt for a guest', function () {

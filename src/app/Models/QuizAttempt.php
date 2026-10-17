@@ -19,6 +19,7 @@ class QuizAttempt extends Model
         'outcome',
         'score',
         'stopped_at_question',
+        'money',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class QuizAttempt extends Model
             'outcome' => QuizOutcome::class,
             'score' => 'integer',
             'stopped_at_question' => 'integer',
+            'money' => 'integer',
         ];
     }
 

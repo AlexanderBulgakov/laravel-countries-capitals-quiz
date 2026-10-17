@@ -57,12 +57,13 @@ class QuizController extends Controller
             $lastResult = $quizSession->lastResult();
 
             QuizAttemptFinished::dispatch(
-                auth()->user(),
-                QuizMode::from($lastResult['mode']),
-                QuizOutcome::from($lastResult['outcome']),
-                $lastResult['score'],
-                $lastResult['stopped_at_question'],
-                $quizSession->answers()
+                user: auth()->user(),
+                mode: QuizMode::from($lastResult['mode']),
+                outcome: QuizOutcome::from($lastResult['outcome']),
+                score: $lastResult['score'],
+                money: $lastResult['money'],
+                stoppedAtQuestion: $lastResult['stopped_at_question'],
+                answers: $quizSession->answers()
             );
         }
 

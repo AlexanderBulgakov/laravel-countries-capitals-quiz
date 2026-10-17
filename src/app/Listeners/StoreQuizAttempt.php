@@ -20,6 +20,7 @@ class StoreQuizAttempt
                 'outcome' => $event->outcome,
                 'score' => $event->score,
                 'stopped_at_question' => $event->stoppedAtQuestion,
+                'money' => $event->money,
             ]);
 
             $attempt->answers()->createMany($event->answers);
