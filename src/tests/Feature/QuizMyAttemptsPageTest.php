@@ -102,3 +102,15 @@ it('ignores an invalid filter value and shows all attempts', function () {
 
     expect($attempts)->toHaveCount(3);
 });
+
+it('shows the prize of each attempt', function () {
+    $user = User::factory()->create();
+
+    QuizAttempt::factory()->completed()->for($user)->create();
+
+    actingAs($user);
+
+    get('/quiz/attempts')
+        ->assertOk()
+        ->assertSeeInOrder(['Prize', '10,000']);
+});

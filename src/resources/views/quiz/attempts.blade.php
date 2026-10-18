@@ -48,6 +48,7 @@
                         <th class="px-4 py-2">Mode</th>
                         <th class="px-4 py-2">Outcome</th>
                         <th class="px-4 py-2">Score</th>
+                        <th class="px-4 py-2">Prize 💰</th>
                         <th class="px-4 py-2">Reached question</th>
                         <th class="px-4 py-2">Date</th>
                     </tr>
@@ -62,6 +63,7 @@
                                 {{ $attempt->outcome->shortLabel() }}
                             </td>
                             <td class="px-4 py-2">{{ $attempt->score }}</td>
+                            <td class="px-4 py-2">{{ Number::format($attempt->money) }}</td>
                             <td class="px-4 py-2">
                                 {{ $attempt->stopped_at_question }}
                             </td>

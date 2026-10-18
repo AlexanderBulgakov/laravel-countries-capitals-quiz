@@ -99,6 +99,7 @@ class QuizController extends Controller
             'score' => $lastResult['score'],
             'stoppedAtQuestion' => $lastResult['stopped_at_question'],
             'mode' => $mode,
+            'money' => $lastResult['money'] ?? 0,
         ]);
     }
 

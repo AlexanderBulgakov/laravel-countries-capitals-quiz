@@ -22,7 +22,7 @@ it('shows the owner a per-question breakdown of their attempt', function () {
         ->count(20)
         ->has(Capital::factory())
         ->create(['region' => 'Europe']);
-        
+
     get(route('quiz.start', QuizMode::CountryToCapital));
 
     $totalQuestions = session('quiz.total_questions');
@@ -39,6 +39,7 @@ it('shows the owner a per-question breakdown of their attempt', function () {
         ->assertOk()
         ->assertSee('Question 1:')
         ->assertSee('Question 10:')
+        ->assertSee('Prize: 10,000')
         ->assertDontSee('Details are not available');
 });
 

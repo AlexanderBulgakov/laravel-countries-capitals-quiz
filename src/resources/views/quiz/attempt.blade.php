@@ -5,6 +5,7 @@
     </p>
 
     <h1 class="mb-6 text-2xl font-semibold">Result: {{ $attempt->outcome->shortLabel() }}</h1>
+    <p class="mb-6 font-semibold">Prize: {{ Number::format($attempt->money) }} 💰</p>
 
     @if ($attempt->answers->isEmpty())
         <p class="text-gray-600">Details are not available for this attempt.</p>
