@@ -2,6 +2,7 @@
 
 namespace App\Services\Quiz;
 
+use App\Enums\Difficulty;
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 
@@ -24,7 +25,7 @@ class GuestQuizSession
 
     public function start(QuizMode $mode): GeneratedQuestion
     {
-        $question = $this->generator->generate($mode);
+        $question = $this->generator->generate($mode, [], Difficulty::forQuestion(1));
 
         session(['quiz' => [
             'mode' => $mode->value,
@@ -135,7 +136,11 @@ class GuestQuizSession
     private function continueAttempt(array $state, array $pending, int $score): AnswerResult
     {
         $mode = QuizMode::from($state['mode']);
-        $nextQuestion = $this->generator->generate($mode, $state['used_country_ids']);
+        $nextQuestion = $this->generator->generate(
+            $mode,
+            $state['used_country_ids'],
+            Difficulty::forQuestion($state['question_number'] + 1),
+        );
 
         session(['quiz' => [
             ...$state,

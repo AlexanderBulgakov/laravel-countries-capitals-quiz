@@ -2,8 +2,11 @@
 
 namespace App\Services\Quiz;
 
+use App\Enums\Difficulty;
 use App\Enums\QuizMode;
 use App\Models\Country;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 
 class QuestionGenerator
 {
@@ -11,13 +14,12 @@ class QuestionGenerator
      * whereHas('capitals') everywhere below — a country synced without a
      * capital row can't be rendered as a question or an option.
      */
-    public function generate(QuizMode $mode, array $excludeCountryIds = []): GeneratedQuestion
+    public function generate(QuizMode $mode, array $excludeCountryIds = [], ?Difficulty $difficulty = null): GeneratedQuestion
     {
-        $target = Country::query()
-            ->whereHas('capitals')
-            ->whereNotIn('id', $excludeCountryIds)
-            ->inRandomOrder()
-            ->first();
+        // A tier can run dry on tiny datasets (tests, a half-synced dev DB) -
+        // a question of the wrong difficulty beats a 500 mid-game.
+        $target = $this->pickTarget($excludeCountryIds, $difficulty)
+            ?? $this->pickTarget($excludeCountryIds, null);
 
         $distractorIds = Country::query()
             ->whereHas('capitals')
@@ -55,5 +57,34 @@ class QuestionGenerator
             targetCountryId: $target->id,
             optionCountryIds: $optionCountryIds,
         );
+    }
+
+    private function pickTarget(array $excludeCountryIds, ?Difficulty $difficulty): ?Country
+    {
+        return Country::query()
+            ->whereHas('capitals')
+            ->whereNotIn('id', $excludeCountryIds)
+            ->when($difficulty, fn ($query) => $query->whereIn('id', $this->tierIds($difficulty)))
+            ->inRandomOrder()
+            ->first();
+    }
+
+    /**
+     * Tiers are ranked over every country with a capital, not over what is left
+     * in the current attempt - otherwise boundaries would shift question by question.
+     */
+    private function tierIds(Difficulty $difficulty): Builder
+    {
+        $tierCount = count(Difficulty::cases());
+
+        $ranked = Country::query()
+            ->whereHas('capitals')
+            ->select('id')
+            ->selectRaw("NTILE({$tierCount}) OVER (ORDER BY population DESC NULLS LAST) AS tier");
+
+        return DB::query()
+            ->fromSub($ranked, 'ranked')
+            ->where('tier', $difficulty->value)
+            ->select('id');
     }
 }

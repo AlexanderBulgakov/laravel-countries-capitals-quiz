@@ -33,6 +33,7 @@ class Country extends Model
         'continents',
         'descriptions_short',
         'flag_url',
+        'population',
     ];
 
     protected function casts(): array
