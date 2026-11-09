@@ -10,6 +10,9 @@
             totalQuestions: {{ $totalQuestions }},
             answerUrl: @js(route('quiz.answer')),
             resultsUrl: @js(route('quiz.results')),
+            usedLifelines: @js($usedLifelines),
+            hiddenOptionIds: @js($hiddenOptionIds),
+            fiftyFiftyUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::FiftyFifty)),
         })"
         x-cloak
     >
@@ -21,6 +24,16 @@
         </div>
 
         <div x-show="!loading">
+            <div
+                class="mb-4 flex items-center justify-between text-sm text-gray-500"
+            >
+                <button
+                    type="button"
+                    @click="useFiftyFifty()"
+                    :disabled="answered || usedLifelines.includes('fifty-fifty')"
+                    class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                >50/50</button>
+            </div>
             <div
                 class="mb-4 flex items-center justify-between text-sm text-gray-500"
             >
@@ -46,7 +59,7 @@
                         @click="answer(option.id)"
                         :disabled="answered"
                         class="cursor-pointer rounded-md border p-6 text-center font-medium transition disabled:cursor-not-allowed"
-                        :class="optionClass(option.id)"
+                        :class="[optionClass(option.id), hiddenOptionIds.includes(option.id) && 'invisible']"
                         x-text="option.label"
                     ></button>
                 </template>

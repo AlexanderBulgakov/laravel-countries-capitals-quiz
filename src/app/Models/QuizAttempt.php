@@ -33,11 +33,17 @@ class QuizAttempt extends Model
         ];
     }
 
+    /**
+     * @return HasMany<QuizAnswer, $this>
+     */
     public function answers(): HasMany
     {
         return $this->hasMany(QuizAnswer::class)->orderBy('question_number');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

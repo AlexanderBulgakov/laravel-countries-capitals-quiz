@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Lifeline;
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 use App\Events\QuizAttemptFinished;
@@ -37,6 +38,8 @@ class QuizController extends Controller
             'score' => $quizSession->score(),
             'questionNumber' => $quizSession->questionNumber(),
             'totalQuestions' => $quizSession->totalQuestions(),
+            'usedLifelines' => $quizSession->usedLifelines(),
+            'hiddenOptionIds' => $quizSession->hiddenOptionIds(),
         ]);
     }
 
@@ -101,6 +104,16 @@ class QuizController extends Controller
             'mode' => $mode,
             'money' => $lastResult['money'] ?? 0,
         ]);
+    }
+
+    public function lifeline(Lifeline $lifeline, GuestQuizSession $quizSession)
+    {
+        return match ($lifeline) {
+            Lifeline::FiftyFifty => response()->json([
+                'hidden_option_ids' => $quizSession->useFiftyFifty(),
+            ]),
+            default => abort(501)
+        };
     }
 
     private function present(GeneratedQuestion $question): array

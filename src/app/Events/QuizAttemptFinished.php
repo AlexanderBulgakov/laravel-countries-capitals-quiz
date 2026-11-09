@@ -13,7 +13,13 @@ class QuizAttemptFinished
     use Dispatchable, SerializesModels;
 
     /**
-     * @param  list<array{question_number: int, target_country_id: int, chosen_country_id: ?int, option_country_ids: list<int>}>  $answers
+     * @param  list<array{
+     *     question_number: int,
+     *     target_country_id: int,
+     *     chosen_country_id: ?int,
+     *     option_country_ids: list<int>,
+     *     lifelines: list<string>,
+     * }>  $answers
      */
     public function __construct(
         public User $user,

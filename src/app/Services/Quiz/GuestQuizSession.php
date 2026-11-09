@@ -3,8 +3,10 @@
 namespace App\Services\Quiz;
 
 use App\Enums\Difficulty;
+use App\Enums\Lifeline;
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
+use App\Exceptions\LifelineUnavailable;
 
 /**
  * Tracks an in-progress quiz attempt via the session. Despite the name,
@@ -33,12 +35,9 @@ class GuestQuizSession
             'question_number' => 1,
             'score' => 0,
             'used_country_ids' => [$question->targetCountryId],
-            'pending' => [
-                'target_country_id' => $question->targetCountryId,
-                'option_country_ids' => $question->optionCountryIds,
-                'question_started_at' => now()->timestamp,
-            ],
+            'pending' => $this->freshPending($question),
             'answers' => [],
+            'used_lifelines' => [],
         ]]);
 
         return $question;
@@ -67,7 +66,7 @@ class GuestQuizSession
         $state = session('quiz');
         $pending = $state['pending'];
 
-        $expired = now()->timestamp - $pending['question_started_at'] >= self::DURATION_SECONDS;
+        $expired = $this->isExpired($pending);
         $validOption = ! is_null($selectedCountryId)
             && in_array($selectedCountryId, $pending['option_country_ids'], true);
         $correct = ! $expired && $validOption && $selectedCountryId === $pending['target_country_id'];
@@ -77,6 +76,7 @@ class GuestQuizSession
             'target_country_id' => $pending['target_country_id'],
             'chosen_country_id' => ($expired || ! $validOption) ? null : $selectedCountryId,
             'option_country_ids' => $pending['option_country_ids'],
+            'lifelines' => $pending['lifelines'] ?? [],
         ];
 
         if (! $correct) {
@@ -147,11 +147,7 @@ class GuestQuizSession
             'question_number' => $state['question_number'] + 1,
             'score' => $score,
             'used_country_ids' => [...$state['used_country_ids'], $nextQuestion->targetCountryId],
-            'pending' => [
-                'target_country_id' => $nextQuestion->targetCountryId,
-                'option_country_ids' => $nextQuestion->optionCountryIds,
-                'question_started_at' => now()->timestamp,
-            ],
+            'pending' => $this->freshPending($nextQuestion),
         ]]);
 
         return new AnswerResult(
@@ -195,5 +191,78 @@ class GuestQuizSession
     public function answers(): array
     {
         return session('quiz.answers', []);
+    }
+
+    public function hiddenOptionIds(): array
+    {
+        return session('quiz.pending.hidden_option_ids', []);
+    }
+
+    public function usedLifelines(): array
+    {
+        return session('quiz.used_lifelines', []);
+    }
+
+    /**
+     * @return list<int> option ids the client should hide
+     */
+    public function useFiftyFifty(): array
+    {
+        $state = $this->claimLifeline(Lifeline::FiftyFifty);
+        $pending = $state['pending'];
+
+        $hiddenIds = collect($pending['option_country_ids'])
+            ->reject(fn (int $id) => $id === $pending['target_country_id'])
+            ->shuffle()
+            ->take(2)
+            ->values()
+            ->all();
+
+        $state['pending']['hidden_option_ids'] = $hiddenIds;
+        session(['quiz' => $state]);
+
+        return $hiddenIds;
+    }
+
+    private function freshPending(GeneratedQuestion $question): array
+    {
+        return [
+            'target_country_id' => $question->targetCountryId,
+            'option_country_ids' => $question->optionCountryIds,
+            'question_started_at' => now()->timestamp,
+            'lifelines' => [],
+            'hidden_option_ids' => [],
+        ];
+    }
+
+    private function isExpired(array $pending): bool
+    {
+        return now()->timestamp - $pending['question_started_at'] >= self::DURATION_SECONDS;
+    }
+
+    /**
+     * Validates and marks the lifeline as spent, returning the updated state
+     * WITHOUT saving it — the caller adds its own effect and saves once.
+     */
+    private function claimLifeline(Lifeline $lifeline): array
+    {
+        $state = session('quiz');
+
+        if (! $state || ! isset($state['pending'])) {
+            throw LifelineUnavailable::noActiveQuiz();
+        }
+
+        if ($this->isExpired($state['pending'])) {
+            throw LifelineUnavailable::questionExpired();
+        }
+
+        if (in_array($lifeline->value, $state['used_lifelines'] ?? [], true)) {
+            throw LifelineUnavailable::alreadyUsed();
+        }
+
+        $state['used_lifelines'] = [...($state['used_lifelines'] ?? []), $lifeline->value];
+        $state['pending']['lifelines'] = [...($state['pending']['lifelines'] ?? []), $lifeline->value];
+
+        return $state;
     }
 }

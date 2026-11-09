@@ -5,6 +5,8 @@ const REVEAL_DELAY_SECONDS = 1;
 Alpine.data("quizPlay", (config) => ({
     prompt: config.prompt,
     options: config.options,
+    usedLifelines: config.usedLifelines,
+    hiddenOptionIds: config.hiddenOptionIds,
     score: config.score,
     questionNumber: config.questionNumber,
     totalQuestions: config.totalQuestions,
@@ -33,6 +35,28 @@ Alpine.data("quizPlay", (config) => ({
         this.correctId = null;
         this.secondsLeft = secondsLeft;
         this.startTimer();
+    },
+
+    async useFiftyFifty() {
+        // Disable the button right away - the server rejects a second claim
+        // anyway (409), this just spares the pointless request.
+        this.usedLifelines.push("fifty-fifty");
+
+        const response = await fetch(config.fiftyFiftyUrl, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]',
+                ).content,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            this.hiddenOptionIds = result.hidden_option_ids;
+        }
     },
 
     startTimer() {
@@ -87,6 +111,7 @@ Alpine.data("quizPlay", (config) => ({
 
             this.prompt = result.next_question.prompt;
             this.options = result.next_question.options;
+            this.hiddenOptionIds = [];
             this.reveal(result.remaining_seconds - REVEAL_DELAY_SECONDS);
         }, REVEAL_DELAY_SECONDS * 1000);
     },

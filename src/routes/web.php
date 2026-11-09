@@ -20,8 +20,14 @@ Route::prefix('quiz')->name('quiz.')->group(function () {
         ->name('landing');
     Route::get('/results', [QuizController::class, 'results'])
         ->name('results');
+    // block(): serializes concurrent requests on the same session
+    // otherwise a double click reads stale state twice and the last write wins.
     Route::post('/answer', [QuizController::class, 'answer'])
+        ->block()
         ->name('answer');
+    Route::post('/lifelines/{lifeline}', [QuizController::class, 'lifeline'])
+        ->block()
+        ->name('lifeline');
     Route::get('/attempts', [QuizAttemptsController::class, 'attempts'])
         ->middleware('auth')
         ->name('attempts');
