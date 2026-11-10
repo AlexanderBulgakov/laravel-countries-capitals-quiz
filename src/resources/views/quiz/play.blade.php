@@ -13,6 +13,7 @@
             usedLifelines: @js($usedLifelines),
             hiddenOptionIds: @js($hiddenOptionIds),
             fiftyFiftyUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::FiftyFifty)),
+            extraTimeUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::ExtraTime)),
         })"
         x-cloak
     >
@@ -33,6 +34,12 @@
                     :disabled="answered || usedLifelines.includes('fifty-fifty')"
                     class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
                 >50/50</button>
+                <button
+                    type="button"
+                    @click="useExtraTime()"
+                    :disabled="answered || usedLifelines.includes('extra-time')"
+                    class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                >+10s</button>
             </div>
             <div
                 class="mb-4 flex items-center justify-between text-sm text-gray-500"

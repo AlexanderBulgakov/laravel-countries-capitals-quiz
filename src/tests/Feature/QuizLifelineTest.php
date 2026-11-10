@@ -6,12 +6,15 @@ use App\Models\Capital;
 use App\Models\Country;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\Quiz\GuestQuizSession;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
 
 beforeEach(function () {
+    $this->freezeTime();
+
     Country::factory()
         ->count(20)
         ->has(Capital::factory())
@@ -114,4 +117,67 @@ it('records lifelines on the answer they were used for', function () {
 
 it('returns 404 for an unknown lifeline', function () {
     postJson(route('quiz.lifeline', 'unknown'))->assertNotFound();
+});
+
+it('adds extra time to the remaining seconds', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    $this->travel(5)->seconds();
+
+    // GuestQuizSession::DURATION_SECONDS
+    postJson(route('quiz.lifeline', Lifeline::ExtraTime))
+        ->assertOk()
+        ->assertJson(['remaining_seconds' => 16 - 5 + GuestQuizSession::EXTRA_TIME_SECONDS]);
+});
+
+it('accepts an answer after the base timer when extra time was used', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::ExtraTime))->assertOk();
+
+    // past the base deadline, inside the extended one
+    $this->travel(20)->seconds();
+
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertJson(['correct' => true, 'finished' => false]);
+});
+
+it('still times out after the extended deadline', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::ExtraTime))->assertOk();
+
+    $this->travel(16 + GuestQuizSession::EXTRA_TIME_SECONDS)->seconds(); // GuestQuizSession::DURATION_SECONDS
+
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertOk()
+        ->assertJson(['outcome' => 'timeout']);
+});
+
+it('treats extra time requested after expiry as a timeout, not a bonus', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    $this->travel(16)->seconds(); // GuestQuizSession::DURATION_SECONDS
+
+    postJson(route('quiz.lifeline', Lifeline::ExtraTime))
+        ->assertConflict()
+        ->assertJson(['error' => 'question_expired']);
+
+    expect(session('quiz.pending.extra_seconds'))->toBe(0);
+
+    // Even the right option can't be saved by the rejected bonus.
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertJson(['outcome' => 'timeout']);
+});
+
+it('resets extra time on the next question', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::ExtraTime))
+        ->assertOk()
+        ->assertJson(['remaining_seconds' => 16 + GuestQuizSession::EXTRA_TIME_SECONDS]);
+
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertOk()
+        ->assertJson(['remaining_seconds' => 16]);
 });

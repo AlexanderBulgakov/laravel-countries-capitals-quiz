@@ -23,6 +23,9 @@ class GuestQuizSession
     // is not adjusted here.
     private const DURATION_SECONDS = 16;
 
+    // Added to the current question's deadline; question_started_at never moves.
+    public const EXTRA_TIME_SECONDS = 10;
+
     public function __construct(private QuestionGenerator $generator) {}
 
     public function start(QuizMode $mode): GeneratedQuestion
@@ -161,11 +164,7 @@ class GuestQuizSession
 
     public function remainingSeconds(): int
     {
-        $pending = session('quiz.pending');
-
-        $elapsed = now()->timestamp - $pending['question_started_at'];
-
-        return max(0, self::DURATION_SECONDS - $elapsed);
+        return max(0, $this->secondsLeft(session('quiz.pending')));
     }
 
     public function lastResult(): ?array
@@ -224,6 +223,18 @@ class GuestQuizSession
         return $hiddenIds;
     }
 
+    /**
+     * @return int seconds left on the extended timer
+     */
+    public function useExtraTime(): int
+    {
+        $state = $this->claimLifeline(Lifeline::ExtraTime);
+        $state['pending']['extra_seconds'] = ($state['pending']['extra_seconds'] ?? 0) + self::EXTRA_TIME_SECONDS;
+        session(['quiz' => $state]);
+
+        return $this->secondsLeft($state['pending']);
+    }
+
     private function freshPending(GeneratedQuestion $question): array
     {
         return [
@@ -232,12 +243,20 @@ class GuestQuizSession
             'question_started_at' => now()->timestamp,
             'lifelines' => [],
             'hidden_option_ids' => [],
+            'extra_seconds' => 0,
         ];
+    }
+
+    private function secondsLeft(array $pending): int
+    {
+        $elapsed = now()->timestamp - $pending['question_started_at'];
+
+        return self::DURATION_SECONDS + ($pending['extra_seconds'] ?? 0) - $elapsed;
     }
 
     private function isExpired(array $pending): bool
     {
-        return now()->timestamp - $pending['question_started_at'] >= self::DURATION_SECONDS;
+        return $this->secondsLeft($pending) <= 0;
     }
 
     /**

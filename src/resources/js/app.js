@@ -2,6 +2,18 @@ import Alpine from "alpinejs";
 
 const REVEAL_DELAY_SECONDS = 1;
 
+async function postJson(url, body = {}) {
+    return fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify(body),
+    });
+}
+
 Alpine.data("quizPlay", (config) => ({
     prompt: config.prompt,
     options: config.options,
@@ -42,21 +54,30 @@ Alpine.data("quizPlay", (config) => ({
         // anyway (409), this just spares the pointless request.
         this.usedLifelines.push("fifty-fifty");
 
-        const response = await fetch(config.fiftyFiftyUrl, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                ).content,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
+        const response = await postJson(config.fiftyFiftyUrl);
 
         if (response.ok) {
             const result = await response.json();
             this.hiddenOptionIds = result.hidden_option_ids;
         }
+    },
+
+    async useExtraTime() {
+        this.usedLifelines.push("extra-time");
+        this.stopTimer();
+
+        const response = await postJson(config.extraTimeUrl);
+
+        // Answered while the request was in flight - restarting the timer would
+        // leak a second interval into the next question.
+        if (this.answered) return;
+
+        if (response.ok) {
+            const result = await response.json();
+            this.secondsLeft = result.remaining_seconds;
+        }
+
+        this.startTimer();
     },
 
     startTimer() {
@@ -85,17 +106,7 @@ Alpine.data("quizPlay", (config) => ({
         this.answered = true;
         this.selectedId = optionId;
 
-        const response = await fetch(config.answerUrl, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                ).content,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify({ option_id: optionId }),
-        });
+        const response = await postJson(config.answerUrl, { option_id: optionId });
 
         const result = await response.json();
 

@@ -112,6 +112,9 @@ class QuizController extends Controller
             Lifeline::FiftyFifty => response()->json([
                 'hidden_option_ids' => $quizSession->useFiftyFifty(),
             ]),
+            Lifeline::ExtraTime => response()->json([
+                'remaining_seconds' => $quizSession->useExtraTime(),
+            ]),
             default => abort(501)
         };
     }
