@@ -57,13 +57,19 @@
                     @foreach ($attempts as $attempt)
                         <tr>
                             <td class="px-4 py-2">
-                                <a class="border-b-1 border-transparent hover:text-gray-900 hover:border-gray-900" href="{{ route('quiz.attempts.show', $attempt) }}">{{ $attempt->mode->label() }}</a>
+                                <a
+                                    class="border-b-1 border-transparent hover:border-gray-900 hover:text-gray-900"
+                                    href="{{ route('quiz.attempts.show', $attempt) }}"
+                                    >{{ $attempt->mode->label() }}</a
+                                >
                             </td>
                             <td class="px-4 py-2">
                                 {{ $attempt->outcome->shortLabel() }}
                             </td>
                             <td class="px-4 py-2">{{ $attempt->score }}</td>
-                            <td class="px-4 py-2">{{ Number::format($attempt->money) }}</td>
+                            <td class="px-4 py-2">
+                                {{ Number::format($attempt->money) }}
+                            </td>
                             <td class="px-4 py-2">
                                 {{ $attempt->stopped_at_question }}
                             </td>

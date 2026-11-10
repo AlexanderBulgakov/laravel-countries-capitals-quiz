@@ -7,7 +7,9 @@
         Prize: {{ Number::format($money) }} 💰
         @guest
             <br />
-            <strong class="text-sm italic">Quiz results are saved only for logged-in users.</strong>
+            <strong class="text-sm italic"
+                >Quiz results are saved only for logged-in users.</strong
+            >
         @endguest
     </p>
 
