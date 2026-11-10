@@ -7,8 +7,10 @@ use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 use App\Events\QuizAttemptFinished;
 use App\Models\Country;
+use App\Services\Quiz\AnswerResult;
 use App\Services\Quiz\GeneratedQuestion;
 use App\Services\Quiz\GuestQuizSession;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
@@ -54,8 +56,11 @@ class QuizController extends Controller
         // signal submitAnswer() expects for "ran out of time".
         $optionId = $request->filled('option_id') ? $request->integer('option_id') : null;
 
-        $result = $quizSession->submitAnswer($optionId);
+        return $this->resultResponse($quizSession->submitAnswer($optionId), $quizSession);
+    }
 
+    private function resultResponse(AnswerResult $result, GuestQuizSession $quizSession): JsonResponse
+    {
         if ($result->finished && auth()->check()) {
             $lastResult = $quizSession->lastResult();
 
@@ -115,7 +120,7 @@ class QuizController extends Controller
             Lifeline::ExtraTime => response()->json([
                 'remaining_seconds' => $quizSession->useExtraTime(),
             ]),
-            default => abort(501)
+            Lifeline::Skip => $this->resultResponse($quizSession->skip(), $quizSession),
         };
     }
 

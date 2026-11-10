@@ -2,11 +2,13 @@
 
 use App\Enums\Lifeline;
 use App\Enums\QuizMode;
+use App\Enums\QuizOutcome;
 use App\Models\Capital;
 use App\Models\Country;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use App\Services\Quiz\GuestQuizSession;
+use App\Services\Quiz\PrizeLadder;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -180,4 +182,101 @@ it('resets extra time on the next question', function () {
     postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
         ->assertOk()
         ->assertJson(['remaining_seconds' => 16]);
+});
+
+it('moves to the next question without scoring a skipped one', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertOk()
+        ->assertJson(['correct' => true]);
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))
+        ->assertOk()
+        ->assertJson([
+            'correct' => false,
+            'score' => 1,           // unchanged - the skip earned nothing
+            'finished' => false,
+            'question_number' => 3, // moved on
+        ]);
+
+    // The fresh question after a skip plays as usual.
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertJson(['correct' => true, 'score' => 2, 'question_number' => 4]);
+});
+
+it('records a skipped question as unanswered with the skip lifeline', function () {
+    actingAs(User::factory()->create());
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))
+        ->assertOk();
+
+    $wrongOptionId = collect(session('quiz.pending.option_country_ids'))
+        ->reject(fn (int $id) => $id === session('quiz.pending.target_country_id'))
+        ->first();
+    postJson(route('quiz.answer'), ['option_id' => $wrongOptionId]);
+
+    $answers = QuizAttempt::sole()->answers;
+
+    expect($answers->pluck('lifelines')->all())
+        ->toBe([[Lifeline::Skip->value], []]);
+
+    $skipped = $answers->first();
+
+    expect($skipped->chosen_country_id)->toBeNull()
+        ->and($skipped->lifelines)->toBe([Lifeline::Skip->value]);
+});
+
+it('completes the attempt with a score of 9 when the last question is skipped', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    foreach (range(1, 9) as $_) {
+        postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+            ->assertOk();
+    }
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))
+        ->assertOk()
+        ->assertJson([
+            'finished' => true,
+            'outcome' => QuizOutcome::Completed->value,
+            'score' => 9,
+            'question_number' => 10,
+        ]);
+});
+
+it('stores a completed attempt that used a skip', function () {
+    actingAs(User::factory()->create());
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    foreach (range(1, 9) as $_) {
+        postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+            ->assertOk();
+    }
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))
+        ->assertOk();
+
+    $quizAttempt = QuizAttempt::sole();
+
+    expect($quizAttempt->outcome)->toBe(QuizOutcome::Completed)
+        ->and($quizAttempt->score)->toBe(9)
+        ->and($quizAttempt->stopped_at_question)->toBe(10)
+        ->and($quizAttempt->money)->toBe(PrizeLadder::moneyFor(9));
+});
+
+it('rejects a second skip in the same attempt', function () {
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))->assertOk();
+    $targetAfterSkip = session('quiz.pending.target_country_id');
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))
+        ->assertConflict()
+        ->assertJson(['error' => 'lifeline_already_used']);
+
+    // The rejected skip must not move the game on.
+    expect(session('quiz.question_number'))->toBe(2)
+        ->and(session('quiz.pending.target_country_id'))->toBe($targetAfterSkip);
 });

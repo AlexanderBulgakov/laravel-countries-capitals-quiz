@@ -74,13 +74,10 @@ class GuestQuizSession
             && in_array($selectedCountryId, $pending['option_country_ids'], true);
         $correct = ! $expired && $validOption && $selectedCountryId === $pending['target_country_id'];
 
-        $state['answers'][] = [
-            'question_number' => $state['question_number'],
-            'target_country_id' => $pending['target_country_id'],
-            'chosen_country_id' => ($expired || ! $validOption) ? null : $selectedCountryId,
-            'option_country_ids' => $pending['option_country_ids'],
-            'lifelines' => $pending['lifelines'] ?? [],
-        ];
+        // Late or forged answers are stored as unanswered, never as the forged id.
+        $chosenCountryId = ($expired || ! $validOption) ? null : $selectedCountryId;
+
+        $state = $this->recordAnswer($state, $pending, $chosenCountryId);
 
         if (! $correct) {
             return $this->finishAttempt(
@@ -91,22 +88,38 @@ class GuestQuizSession
             );
         }
 
-        $score = $state['score'] + 1;
+        return $this->advance($state, $pending, $state['score'] + 1, correct: true);
+    }
 
-        if ($state['total_questions'] < $state['question_number'] + 1) {
+    private function recordAnswer(array $state, array $pending, ?int $chosenCountryId): array
+    {
+        $state['answers'][] = [
+            'question_number' => $state['question_number'],
+            'target_country_id' => $pending['target_country_id'],
+            'chosen_country_id' => $chosenCountryId,
+            'option_country_ids' => $pending['option_country_ids'],
+            'lifelines' => $pending['lifelines'] ?? [],
+        ];
+
+        return $state;
+    }
+
+    /**
+     * Moves past the current question: finishes the attempt after the last one,
+     * otherwise serves the next. Shared by answering and skipping.
+     */
+    private function advance(array $state, array $pending, int $score, bool $correct): AnswerResult
+    {
+        if ($state['question_number'] >= $state['total_questions']) {
             return $this->finishAttempt(
                 state: [...$state, 'score' => $score],
                 pending: $pending,
                 outcome: QuizOutcome::Completed,
-                correct: true
+                correct: $correct,
             );
         }
 
-        return $this->continueAttempt(
-            state: $state,
-            pending: $pending,
-            score: $score
-        );
+        return $this->continueAttempt($state, $pending, $score, $correct);
     }
 
     private function finishAttempt(array $state, array $pending, QuizOutcome $outcome, bool $correct): AnswerResult
@@ -136,7 +149,7 @@ class GuestQuizSession
         );
     }
 
-    private function continueAttempt(array $state, array $pending, int $score): AnswerResult
+    private function continueAttempt(array $state, array $pending, int $score, bool $correct): AnswerResult
     {
         $mode = QuizMode::from($state['mode']);
         $nextQuestion = $this->generator->generate(
@@ -154,7 +167,7 @@ class GuestQuizSession
         ]]);
 
         return new AnswerResult(
-            correct: true,
+            correct: $correct,
             correctCountryId: $pending['target_country_id'],
             score: $score,
             finished: false,
@@ -233,6 +246,17 @@ class GuestQuizSession
         session(['quiz' => $state]);
 
         return $this->secondsLeft($state['pending']);
+    }
+
+    public function skip(): AnswerResult
+    {
+        $state = $this->claimLifeline(Lifeline::Skip);
+        $pending = $state['pending'];
+
+        $state = $this->recordAnswer($state, $pending, null);
+
+        // No point for a skipped question - which is why 10/10 becomes unreachable.
+        return $this->advance($state, $pending, $state['score'], correct: false);
     }
 
     private function freshPending(GeneratedQuestion $question): array
