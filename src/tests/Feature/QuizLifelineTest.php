@@ -280,3 +280,19 @@ it('rejects a second skip in the same attempt', function () {
     expect(session('quiz.question_number'))->toBe(2)
         ->and(session('quiz.pending.target_country_id'))->toBe($targetAfterSkip);
 });
+
+it('shows a skipped question as skipped even when the attempt timed out', function () {
+    actingAs(User::factory()->create());
+    get(route('quiz.start', QuizMode::CountryToCapital));
+
+    postJson(route('quiz.lifeline', Lifeline::Skip))->assertOk();
+
+    $this->travel(16)->seconds(); // GuestQuizSession::DURATION_SECONDS
+
+    postJson(route('quiz.answer'), ['option_id' => session('quiz.pending.target_country_id')])
+        ->assertOk();
+
+    get(route('quiz.attempts.show', QuizAttempt::sole()))
+        ->assertOk()
+        ->assertSeeInOrder(['Skipped.', 'No answer — time ran out.']);
+});

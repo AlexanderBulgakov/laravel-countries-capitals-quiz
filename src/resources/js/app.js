@@ -6,7 +6,8 @@ async function postJson(url, body = {}) {
     return fetch(url, {
         method: "POST",
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                .content,
             "Content-Type": "application/json",
             Accept: "application/json",
         },
@@ -80,6 +81,25 @@ Alpine.data("quizPlay", (config) => ({
         this.startTimer();
     },
 
+    async useSkip() {
+        this.usedLifelines.push("skip");
+        this.stopTimer();
+
+        // Lock the options before the request - a click in flight would land
+        // on the next question as a forged answer.
+        this.answered = true;
+
+        const response = await postJson(config.skipUrl);
+
+        if (response.ok) {
+            const result = await response.json();
+            this.handleResult(result);
+        } else {
+            this.answered = false;
+            this.startTimer();
+        }
+    },
+
     startTimer() {
         this.timer = setInterval(() => {
             this.secondsLeft--;
@@ -106,10 +126,16 @@ Alpine.data("quizPlay", (config) => ({
         this.answered = true;
         this.selectedId = optionId;
 
-        const response = await postJson(config.answerUrl, { option_id: optionId });
+        const response = await postJson(config.answerUrl, {
+            option_id: optionId,
+        });
 
         const result = await response.json();
 
+        this.handleResult(result);
+    },
+
+    handleResult(result) {
         this.correctId = result.correct_country_id;
         this.score = result.score;
         this.questionNumber = result.question_number;

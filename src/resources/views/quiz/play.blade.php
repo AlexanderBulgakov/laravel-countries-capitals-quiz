@@ -14,6 +14,7 @@
             hiddenOptionIds: @js($hiddenOptionIds),
             fiftyFiftyUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::FiftyFifty)),
             extraTimeUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::ExtraTime)),
+            skipUrl: @js(route('quiz.lifeline', \App\Enums\Lifeline::Skip)),
         })"
         x-cloak
     >
@@ -26,23 +27,36 @@
 
         <div x-show="!loading">
             <div
-                class="mb-4 flex items-center justify-between text-sm text-gray-500"
+                class="mb-4 flex items-center justify-between border-b pb-4 text-sm text-gray-500"
             >
                 <button
                     type="button"
                     @click="useFiftyFifty()"
-                    :disabled="answered || usedLifelines.includes('fifty-fifty')"
+                    :disabled="answered ||
+                    usedLifelines.includes('fifty-fifty')"
                     class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-                >50/50</button>
+                >
+                    50/50
+                </button>
+                <button
+                    type="button"
+                    @click="useSkip()"
+                    :disabled="answered || usedLifelines.includes('skip')"
+                    class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    Skip
+                </button>
                 <button
                     type="button"
                     @click="useExtraTime()"
                     :disabled="answered || usedLifelines.includes('extra-time')"
                     class="cursor-pointer rounded-md border p-3 text-center font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-                >+10s</button>
+                >
+                    +10s
+                </button>
             </div>
             <div
-                class="mb-4 flex items-center justify-between text-sm text-gray-500"
+                class="mb-4 flex items-center justify-between border-b pb-4 text-sm text-gray-500"
             >
                 <span class="text-red-600"
                     >Time left: <span x-text="secondsLeft"></span>s</span
@@ -66,7 +80,10 @@
                         @click="answer(option.id)"
                         :disabled="answered"
                         class="cursor-pointer rounded-md border p-6 text-center font-medium transition disabled:cursor-not-allowed"
-                        :class="[optionClass(option.id), hiddenOptionIds.includes(option.id) && 'invisible']"
+                        :class="[
+                            optionClass(option.id),
+                            hiddenOptionIds.includes(option.id) && 'invisible',
+                        ]"
                         x-text="option.label"
                     ></button>
                 </template>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Lifeline;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -57,5 +58,10 @@ class QuizAnswer extends Model
     public function chosenCountry(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'chosen_country_id');
+    }
+
+    public function wasSkipped(): bool
+    {
+        return in_array(Lifeline::Skip->value, $this->lifelines, true);
     }
 }
