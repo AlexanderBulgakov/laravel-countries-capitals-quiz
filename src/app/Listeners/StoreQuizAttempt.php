@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\QuizAttemptFinished;
 use App\Models\QuizAttempt;
+use Illuminate\Support\Facades\DB;
 
 class StoreQuizAttempt
 {
@@ -12,12 +13,17 @@ class StoreQuizAttempt
      */
     public function handle(QuizAttemptFinished $event): void
     {
-        QuizAttempt::create([
-            'user_id' => $event->user->id,
-            'mode' => $event->mode,
-            'outcome' => $event->outcome,
-            'score' => $event->score,
-            'stopped_at_question' => $event->stoppedAtQuestion,
-        ]);
+        DB::transaction(function () use ($event) {
+            $attempt = QuizAttempt::create([
+                'user_id' => $event->user->id,
+                'mode' => $event->mode,
+                'outcome' => $event->outcome,
+                'score' => $event->score,
+                'stopped_at_question' => $event->stoppedAtQuestion,
+                'money' => $event->money,
+            ]);
+
+            $attempt->answers()->createMany($event->answers);
+        });
     }
 }

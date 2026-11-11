@@ -8,16 +8,20 @@ sync, queues and scheduling, caching, and tests.
 ![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> 🚧 **Work in progress.** 4/10 phases complete. Not feature-complete yet —
+> 🚧 **Work in progress.** 5/10 phases complete. Not feature-complete yet —
 > see commit history for current progress.
 
-The guest quiz is already playable end to end: pick "guess the capital" or
-"guess the country", answer against a per-question timer, sudden-death
-scoring (any wrong answer or timeout ends the run), and a results screen.
-Registered users additionally get their quiz attempts saved and can browse
-a filterable history of past attempts. A public leaderboard ranks users by
+The quiz is playable end to end, for guests and registered users alike:
+pick "guess the capital" or "guess the country" and answer 10 questions
+against a per-question timer. It plays like a game show — questions get
+harder as you go (countries ranked into thirds by population), any wrong
+answer or timeout ends the run, but prize milestones at 3, 6 and 10 correct
+answers are kept. Three one-time lifelines: 50/50, +10 seconds, and skip
+(the skipped question earns nothing, so the top prize is out of reach).
+Registered users get every attempt saved, with a filterable history and a
+per-question breakdown of each run. A public leaderboard ranks users by
 completed quizzes (cached, tie-aware, invalidated on new completions).
-Difficulty levels and external data (weather/currency) are not built yet.
+External data (weather/currency) is not built yet.
 
 **Development approach:** built with Claude Code as a pairing/mentoring
 tool. The first two phases of code started as solutions proposed by Claude

@@ -26,6 +26,7 @@ class CountryFactory extends Factory
             'continents' => [fake()->randomElement(['Africa', 'Americas', 'Asia', 'Europe', 'Oceania'])],
             'descriptions_short' => fake()->sentence(),
             'flag_url' => fake()->imageUrl(),
+            'population' => fake()->numberBetween(1_000, 1_500_000_000),
         ];
     }
 }

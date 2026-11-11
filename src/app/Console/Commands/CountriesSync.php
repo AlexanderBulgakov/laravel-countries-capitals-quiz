@@ -42,7 +42,7 @@ class CountriesSync extends Command
                     ->get(config('services.restcountries.base_url'), [
                         'limit' => self::PAGE_LIMIT,
                         'offset' => $offset,
-                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals',
+                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals,population',
                     ]);
             } catch (RequestException $e) {
                 Log::error('countries:sync: failed to fetch page', [
@@ -98,6 +98,7 @@ class CountriesSync extends Command
                 'continents' => $data['continents'] ?? null,
                 'descriptions_short' => $data['descriptions']['short'] ?? null,
                 'flag_url' => $data['flag']['url_svg'] ?? null,
+                'population' => $data['population'] ?? null,
             ]
         );
 

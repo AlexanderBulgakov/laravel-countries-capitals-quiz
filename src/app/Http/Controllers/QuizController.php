@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Lifeline;
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 use App\Events\QuizAttemptFinished;
 use App\Models\Country;
+use App\Services\Quiz\AnswerResult;
 use App\Services\Quiz\GeneratedQuestion;
 use App\Services\Quiz\GuestQuizSession;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
@@ -37,6 +40,8 @@ class QuizController extends Controller
             'score' => $quizSession->score(),
             'questionNumber' => $quizSession->questionNumber(),
             'totalQuestions' => $quizSession->totalQuestions(),
+            'usedLifelines' => $quizSession->usedLifelines(),
+            'hiddenOptionIds' => $quizSession->hiddenOptionIds(),
         ]);
     }
 
@@ -51,17 +56,22 @@ class QuizController extends Controller
         // signal submitAnswer() expects for "ran out of time".
         $optionId = $request->filled('option_id') ? $request->integer('option_id') : null;
 
-        $result = $quizSession->submitAnswer($optionId);
+        return $this->resultResponse($quizSession->submitAnswer($optionId), $quizSession);
+    }
 
+    private function resultResponse(AnswerResult $result, GuestQuizSession $quizSession): JsonResponse
+    {
         if ($result->finished && auth()->check()) {
             $lastResult = $quizSession->lastResult();
 
             QuizAttemptFinished::dispatch(
-                auth()->user(),
-                QuizMode::from($lastResult['mode']),
-                QuizOutcome::from($lastResult['outcome']),
-                $lastResult['score'],
-                $lastResult['stopped_at_question'],
+                user: auth()->user(),
+                mode: QuizMode::from($lastResult['mode']),
+                outcome: QuizOutcome::from($lastResult['outcome']),
+                score: $lastResult['score'],
+                money: $lastResult['money'],
+                stoppedAtQuestion: $lastResult['stopped_at_question'],
+                answers: $quizSession->answers()
             );
         }
 
@@ -97,7 +107,21 @@ class QuizController extends Controller
             'score' => $lastResult['score'],
             'stoppedAtQuestion' => $lastResult['stopped_at_question'],
             'mode' => $mode,
+            'money' => $lastResult['money'] ?? 0,
         ]);
+    }
+
+    public function lifeline(Lifeline $lifeline, GuestQuizSession $quizSession)
+    {
+        return match ($lifeline) {
+            Lifeline::FiftyFifty => response()->json([
+                'hidden_option_ids' => $quizSession->useFiftyFifty(),
+            ]),
+            Lifeline::ExtraTime => response()->json([
+                'remaining_seconds' => $quizSession->useExtraTime(),
+            ]),
+            Lifeline::Skip => $this->resultResponse($quizSession->skip(), $quizSession),
+        };
     }
 
     private function present(GeneratedQuestion $question): array
@@ -111,20 +135,10 @@ class QuizController extends Controller
         $target = $countries[$question->targetCountryId];
 
         return [
-            'prompt' => match ($question->mode) {
-                QuizMode::CountryToCapital => $target->name_common,
-                QuizMode::CapitalToCountry => $target->capitals->first()->name,
-            },
+            'prompt' => $question->mode->promptLabel($target),
             'options' => collect($question->optionCountryIds)->map(fn ($id) => [
                 'id' => $id,
-                'label' => match ($question->mode) {
-                    // TODO: always picks the country's first capital (e.g. always Pretoria
-                    // for South Africa, never Cape Town/Bloemfontein) — a deliberate
-                    // simplification. Fix plan (pick one random capital id once at
-                    // generation time).
-                    QuizMode::CountryToCapital => $countries[$id]->capitals->first()->name,
-                    QuizMode::CapitalToCountry => $countries[$id]->name_common,
-                },
+                'label' => $question->mode->optionLabel($countries[$id]),
             ]),
         ];
     }

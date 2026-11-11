@@ -6,6 +6,7 @@ use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\Quiz\PrizeLadder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -34,6 +35,7 @@ class QuizAttemptFactory extends Factory
             'outcome' => $outcome,
             'score' => $score,
             'stopped_at_question' => $outcome === QuizOutcome::Completed ? 10 : $score + 1,
+            'money' => fn (array $attributes) => PrizeLadder::moneyFor($attributes['score']),
         ];
     }
 

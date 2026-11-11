@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\QuizMode;
 use App\Enums\QuizOutcome;
+use App\Models\Country;
+use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +30,23 @@ class QuizAttemptsController extends Controller
             'attempts' => $attempts,
             'modes' => QuizMode::cases(),
             'outcomes' => QuizOutcome::cases(),
+        ]);
+    }
+
+    public function show(QuizAttempt $attempt)
+    {
+        $attempt->load('answers');
+        $countryIds = $attempt->answers
+            ->flatMap(fn (QuizAnswer $answer) => $answer->option_country_ids)
+            ->unique();
+        $countries = Country::with('capitals')
+            ->whereIn('id', $countryIds)
+            ->get()
+            ->keyBy('id');
+
+        return view('quiz.attempt', [
+            'attempt' => $attempt,
+            'countries' => $countries,
         ]);
     }
 }

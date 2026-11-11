@@ -2,7 +2,15 @@
     <h1 class="mb-4 text-2xl font-semibold">{{ $heading }}</h1>
 
     <p class="mb-6 text-gray-600">
-        Score: {{ $score }}<br />Reached question: {{ $stoppedAtQuestion }}
+        Score: {{ $score }}<br />
+        Reached question: {{ $stoppedAtQuestion }}<br />
+        Prize: {{ Number::format($money) }} 💰
+        @guest
+            <br />
+            <strong class="text-sm italic"
+                >Quiz results are saved only for logged-in users.</strong
+            >
+        @endguest
     </p>
 
     <div>
