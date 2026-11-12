@@ -27,6 +27,10 @@ class CountryFactory extends Factory
             'descriptions_short' => fake()->sentence(),
             'flag_url' => fake()->imageUrl(),
             'population' => fake()->numberBetween(1_000, 1_500_000_000),
+            'subregion' => fake()->randomElement(['Western Asia', 'Southern Asia', 'Southeast Europe', 'Northern Africa', 'Polynesia', 'Middle Africa']),
+            'area_km2' => fake()->randomFloat(2, 100, 1_000_000),
+            'sovereign' => fake()->boolean(80),
+            'memberships' => [],
         ];
     }
 }

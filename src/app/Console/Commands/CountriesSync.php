@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Capital;
 use App\Models\Country;
+use App\Models\Language;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 #[Signature('countries:sync')]
-#[Description('Sync countries and capitals from the REST Countries API')]
+#[Description('Sync countries, capitals and languages from the REST Countries API')]
 class CountriesSync extends Command
 {
     // Maximum page size on the REST Countries free tier (100; paid plans allow up to 500) —
@@ -42,7 +43,7 @@ class CountriesSync extends Command
                     ->get(config('services.restcountries.base_url'), [
                         'limit' => self::PAGE_LIMIT,
                         'offset' => $offset,
-                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals,population',
+                        'response_fields' => 'names.common,names.official,codes,region,uuid,continents,descriptions.short,flag.url_svg,capitals,population,subregion,area.kilometers,classification.sovereign,memberships,languages',
                     ]);
             } catch (RequestException $e) {
                 Log::error('countries:sync: failed to fetch page', [
@@ -99,15 +100,56 @@ class CountriesSync extends Command
                 'descriptions_short' => $data['descriptions']['short'] ?? null,
                 'flag_url' => $data['flag']['url_svg'] ?? null,
                 'population' => $data['population'] ?? null,
+                'subregion' => $data['subregion'] ?? null,
+                'area_km2' => $data['area']['kilometers'] ?? null,
+                'sovereign' => $data['classification']['sovereign'] ?? null,
+                'memberships' => $this->activeMemberships($data['memberships'] ?? []),
             ]
         );
 
         foreach ($data['capitals'] ?? [] as $capitalData) {
             Capital::updateOrCreate(
-                ['country_id' => $country->id, 'name' => $capitalData['name']],
+                [
+                    'country_id' => $country->id,
+                    'name' => $capitalData['name'],
+                ],
             );
         }
 
+        $languageIds = [];
+        foreach ($data['languages'] ?? [] as $languageData) {
+            if (empty($languageData['iso639_3'])) {
+                Log::warning('countries:sync: language without iso639_3 skipped', [
+                    'country' => $country->name_common,
+                    'language' => $languageData['name'] ?? null,
+                ]);
+
+                continue;
+            }
+
+            $language = Language::updateOrCreate(
+                [
+                    'iso639_3' => $languageData['iso639_3'],
+                ],
+                [
+                    'name' => $languageData['name'],
+                ],
+            );
+
+            $languageIds[] = $language->id;
+        }
+
+        $country->languages()->sync($languageIds);
+
         return $country;
+    }
+
+    /**
+     * @param  array<string, bool>  $memberships
+     * @return list<string>
+     */
+    private function activeMemberships(array $memberships): array
+    {
+        return collect($memberships)->filter()->keys()->all();
     }
 }

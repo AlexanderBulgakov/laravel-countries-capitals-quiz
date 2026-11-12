@@ -6,6 +6,7 @@ use Database\Factories\CountryFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -18,6 +19,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $name_common
  * @property-read Collection<int, Capital> $capitals
+ * @property list<string> $memberships
+ * @property ?string $subregion
+ * @property ?string $area_km2
+ * @property ?string $density
+ * @property ?bool $sovereign
  */
 class Country extends Model
 {
@@ -34,12 +40,21 @@ class Country extends Model
         'descriptions_short',
         'flag_url',
         'population',
+        'subregion',
+        'area_km2',
+        'sovereign',
+        'memberships',
     ];
 
     protected function casts(): array
     {
         return [
             'continents' => 'array',
+            'memberships' => 'array',
+            'sovereign' => 'boolean',
+            'area_km2' => 'decimal:2',
+            'density' => 'decimal:2',
+            'population' => 'integer',
         ];
     }
 
@@ -49,5 +64,13 @@ class Country extends Model
     public function capitals(): HasMany
     {
         return $this->hasMany(Capital::class);
+    }
+
+    /**
+     * @return BelongsToMany<Language, $this>
+     */
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(Language::class);
     }
 }
