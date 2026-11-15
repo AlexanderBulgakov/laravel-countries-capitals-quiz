@@ -100,7 +100,7 @@ class CountriesSync extends Command
                 'descriptions_short' => $data['descriptions']['short'] ?? null,
                 'flag_url' => $data['flag']['url_svg'] ?? null,
                 'population' => $data['population'] ?? null,
-                'subregion' => $data['subregion'] ?? null,
+                'subregion' => filled($data['subregion'] ?? null) ? $data['subregion'] : null,
                 'area_km2' => $data['area']['kilometers'] ?? null,
                 'sovereign' => $data['classification']['sovereign'] ?? null,
                 'memberships' => $this->activeMemberships($data['memberships'] ?? []),

@@ -327,3 +327,17 @@ it('detaches a language the API no longer lists for a country', function () {
     expect($albania->languages->pluck('name')->all())
         ->toEqualCanonicalizing(['Albanian']);
 });
+
+it('stores an empty subregion as null', function () {
+    $uuid = (string) Str::uuid();
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::response(
+            apiPage([...countryFixture($uuid, 'Antarctica', 'ATA'), 'subregion' => '']),
+        ),
+    ]);
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    expect(Country::firstWhere('restcountries_uuid', $uuid)->subregion)->toBeNull();
+});
