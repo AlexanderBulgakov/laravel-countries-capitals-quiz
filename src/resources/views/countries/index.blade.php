@@ -49,140 +49,142 @@
                 </select>
 
                 <details @if ($filters->hasAdvancedFilters()) open @endif>
-                    <summary class="mb-2">More filters</summary>
+                    <summary class="mb-2 cursor-pointer">More filters</summary>
 
-                    <label for="language" class="font-semibold">Language</label>
-                    <select
-                        id="language"
-                        name="language"
-                        class="w-full mb-2 cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
-                    >
-                        <option value="">Any</option>
-                        @foreach ($languages as $language)
+                    <div class="mb-2 flex flex-col gap-2">
+                        <label for="language" class="font-semibold">Language</label>
+                        <select
+                            id="language"
+                            name="language"
+                            class="w-full cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
+                        >
+                            <option value="">Any</option>
+                            @foreach ($languages as $language)
+                                <option
+                                    value="{{ $language->iso639_3 }}"
+                                    @selected ($filters->language === $language->iso639_3)
+                                >
+                                    {{ $language->name }} ({{ $language->countries_count }})
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <label for="sovereign" class="font-semibold"
+                            >Sovereign</label
+                        >
+                        <select
+                            id="sovereign"
+                            name="sovereign"
+                            class="w-full cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
+                        >
+                            <option value="">Any</option>
                             <option
-                                value="{{ $language->iso639_3 }}"
-                                @selected ($filters->language === $language->iso639_3)
+                                value="1"
+                                @selected ($filters->sovereign === true)
                             >
-                                {{ $language->name }} ({{ $language->countries_count }})
+                                Sovereign
                             </option>
-                        @endforeach
-                    </select>
+                            <option
+                                value="0"
+                                @selected ($filters->sovereign === false)
+                            >
+                                Non-sovereign
+                            </option>
+                        </select>
 
-                    <label for="sovereign" class="font-semibold"
-                        >Sovereign</label
-                    >
-                    <select
-                        id="sovereign"
-                        name="sovereign"
-                        class="w-full mb-2 cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
-                    >
-                        <option value="">Any</option>
-                        <option
-                            value="1"
-                            @selected ($filters->sovereign === true)
-                        >
-                            Sovereign
-                        </option>
-                        <option
-                            value="0"
-                            @selected ($filters->sovereign === false)
-                        >
-                            Non-sovereign
-                        </option>
-                    </select>
-
-                    <fieldset class="mb-2">
-                        <legend class="font-semibold">Population</legend>
-                        <label>
-                            Min
-                            <input
-                                class="w-full"
-                                name="population_min"
-                                type="number"
-                                value="{{ $filters->populationMin }}"
-                                min="0"
-                                step="1"
-                            />
-                        </label>
-                        <label>
-                            Max
-                            <input
-                                class="w-full"
-                                name="population_max"
-                                type="number"
-                                value="{{ $filters->populationMax }}"
-                                min="0"
-                                step="1"
-                            />
-                        </label>
-                    </fieldset>
-
-                    <fieldset class="mb-2">
-                        <legend class="font-semibold">Area</legend>
-                        <label>
-                            Min
-                            <input
-                                class="w-full"
-                                step="any"
-                                name="area_min"
-                                type="number"
-                                value="{{ $filters->areaMin }}"
-                                min="0"
-                            />
-                        </label>
-                        <label>
-                            Max
-                            <input
-                                class="w-full"
-                                step="any"
-                                name="area_max"
-                                type="number"
-                                value="{{ $filters->areaMax }}"
-                                min="0"
-                            />
-                        </label>
-                    </fieldset>
-
-                    <fieldset class="mb-2">
-                        <legend class="font-semibold">Density</legend>
-                        <label>
-                            Min
-                            <input
-                                class="w-full"
-                                step="any"
-                                name="density_min"
-                                type="number"
-                                value="{{ $filters->densityMin }}"
-                                min="0"
-                            />
-                        </label>
-                        <label>
-                            Max
-                            <input
-                                class="w-full"
-                                step="any"
-                                name="density_max"
-                                type="number"
-                                value="{{ $filters->densityMax }}"
-                                min="0"
-                            />
-                        </label>
-                    </fieldset>
-
-                    <fieldset class="mb-2">
-                        <legend class="font-semibold">Memberships</legend>
-                        @foreach (Membership::cases() as $membership)
-                            <label class="block">
+                        <fieldset>
+                            <legend class="font-semibold">Population</legend>
+                            <label>
+                                Min
                                 <input
-                                    type="checkbox"
-                                    name="memberships[]"
-                                    @checked (in_array($membership, $filters->memberships, true))
-                                    value="{{ $membership->value }}"
+                                    class="w-full"
+                                    name="population_min"
+                                    type="number"
+                                    value="{{ $filters->populationMin }}"
+                                    min="0"
+                                    step="1"
                                 />
-                                {{ $membership->label() }}
                             </label>
-                        @endforeach
-                    </fieldset>
+                            <label>
+                                Max
+                                <input
+                                    class="w-full"
+                                    name="population_max"
+                                    type="number"
+                                    value="{{ $filters->populationMax }}"
+                                    min="0"
+                                    step="1"
+                                />
+                            </label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend class="font-semibold">Area</legend>
+                            <label>
+                                Min
+                                <input
+                                    class="w-full"
+                                    step="any"
+                                    name="area_min"
+                                    type="number"
+                                    value="{{ $filters->areaMin }}"
+                                    min="0"
+                                />
+                            </label>
+                            <label>
+                                Max
+                                <input
+                                    class="w-full"
+                                    step="any"
+                                    name="area_max"
+                                    type="number"
+                                    value="{{ $filters->areaMax }}"
+                                    min="0"
+                                />
+                            </label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend class="font-semibold">Density</legend>
+                            <label>
+                                Min
+                                <input
+                                    class="w-full"
+                                    step="any"
+                                    name="density_min"
+                                    type="number"
+                                    value="{{ $filters->densityMin }}"
+                                    min="0"
+                                />
+                            </label>
+                            <label>
+                                Max
+                                <input
+                                    class="w-full"
+                                    step="any"
+                                    name="density_max"
+                                    type="number"
+                                    value="{{ $filters->densityMax }}"
+                                    min="0"
+                                />
+                            </label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend class="font-semibold">Memberships</legend>
+                            @foreach (Membership::cases() as $membership)
+                                <label class="cursor-poiner flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        name="memberships[]"
+                                        @checked (in_array($membership, $filters->memberships, true))
+                                        value="{{ $membership->value }}"
+                                    />
+                                    <span>{{ $membership->label() }}</span>
+                                </label>
+                            @endforeach
+                        </fieldset>
+                    </div>
                 </details>
 
                 <button
