@@ -8,7 +8,7 @@ sync, queues and scheduling, caching, and tests.
 ![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> 🚧 **Work in progress.** 5/10 phases complete. Not feature-complete yet —
+> 🚧 **Work in progress.** 6/10 phases complete. Not feature-complete yet —
 > see commit history for current progress.
 
 The quiz is playable end to end, for guests and registered users alike:
@@ -21,7 +21,12 @@ answers are kept. Three one-time lifelines: 50/50, +10 seconds, and skip
 Registered users get every attempt saved, with a filterable history and a
 per-question breakdown of each run. A public leaderboard ranks users by
 completed quizzes (cached, tie-aware, invalidated on new completions).
-External data (weather/currency) is not built yet.
+
+The country catalog at `/countries` supports combined filters: region and
+subregion, population/area/density ranges, sovereignty, spoken language,
+and international memberships (UN, EU, NATO…). Filters apply without a
+page reload (Alpine.js + Blade fragments), and the URL stays clean and
+shareable. External data (weather/currency) is not built yet.
 
 **Development approach:** built with Claude Code as a pairing/mentoring
 tool. The first two phases of code started as solutions proposed by Claude
