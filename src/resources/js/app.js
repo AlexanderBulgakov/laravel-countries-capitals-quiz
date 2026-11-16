@@ -15,6 +15,90 @@ async function postJson(url, body = {}) {
     });
 }
 
+Alpine.data("countryFilters", (config) => ({
+    loading: false,
+    controller: null,
+    region: config.region,
+
+    apply() {
+        const params = new URLSearchParams(
+            [...new FormData(this.$refs.form)].filter(
+                ([, value]) => value !== "",
+            ),
+        );
+        const url = params.size
+            ? `${location.pathname}?${params}`
+            : location.pathname;
+
+        this.load(url);
+    },
+
+    paginate(event) {
+        const link = event.target.closest("a");
+
+        if (!link?.closest("[data-pagination]")) {
+            return;
+        }
+
+        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
+
+        event.preventDefault();
+
+        this.load(link.href);
+
+        this.$refs.results.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    },
+
+    regionChanged(event) {
+        this.region = event.target.value;
+
+        const option = this.$refs.subregion.selectedOptions[0];
+
+        if (this.region !== "" && option?.parentElement.label !== this.region) {
+            this.$refs.subregion.value = "";
+        }
+    },
+
+    async load(url) {
+        this.loading = true;
+
+        this.controller?.abort();
+        const controller = new AbortController();
+        this.controller = controller;
+
+        try {
+            const response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "text/html",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("loading failed");
+            }
+
+            this.$refs.results.innerHTML = await response.text();
+
+            history.replaceState(null, "", url);
+        } catch (error) {
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            window.location.href = url;
+        } finally {
+            if (this.controller === controller) this.loading = false;
+        }
+    },
+}));
+
 Alpine.data("quizPlay", (config) => ({
     prompt: config.prompt,
     options: config.options,
