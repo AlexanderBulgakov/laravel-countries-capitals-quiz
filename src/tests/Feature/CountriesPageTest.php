@@ -379,3 +379,88 @@ it('renders the page with all filters applied', function () {
     expect(countryNamesOnPage($response))
         ->toBe(['Testland']);
 });
+
+it('returns only the results fragment for an ajax request', function () {
+    Country::factory()->create([
+        'name_common' => 'Testland',
+        'region' => 'Test',
+        'subregion' => 'Test',
+    ]);
+
+    $response = $this->get(route('countries.index', [
+        'region' => 'Test',
+    ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk();
+    $response->assertSee('Testland');
+    $response->assertDontSee('More filters');
+    $response->assertDontSee('<html', false);
+});
+
+it('returns the full page for a regular request', function () {
+    Country::factory()->create([
+        'name_common' => 'Testland',
+        'region' => 'Test',
+        'subregion' => 'Test',
+    ]);
+
+    $response = $this->get(route('countries.index', [
+        'region' => 'Test',
+    ]));
+
+    $response->assertOk();
+    $response->assertSee('Testland');
+    $response->assertSee('More filters');
+    $response->assertSee('<html', false);
+});
+
+it('sends Vary: X-Requested-With on both responses', function (array $header) {
+    Country::factory()->create([
+        'name_common' => 'Testland',
+        'region' => 'Test',
+    ]);
+
+    $response = $this->get(route('countries.index', [
+        'region' => 'Test',
+    ]), $header);
+
+    $response->assertOk();
+    $response->assertHeader('Vary', 'X-Requested-With');
+})->with([
+    'standard request' => [[]],
+    'ajax request' => [['X-Requested-With' => 'XMLHttpRequest']],
+]);
+
+it('applies filters to the ajax fragment', function () {
+    Country::factory()->create([
+        'name_common' => 'Alphaland',
+        'region' => 'Test',
+    ]);
+
+    Country::factory()->create([
+        'name_common' => 'Betaland',
+        'region' => 'Test2',
+    ]);
+
+    $response = $this->get(route('countries.index', [
+        'region' => 'Test',
+    ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk();
+    $response->assertSee('Alphaland');
+    $response->assertDontSee('Betaland');
+});
+
+it('shows an empty state in the ajax fragment', function () {
+    Country::factory()->create([
+        'name_common' => 'Testland',
+        'region' => 'Test',
+    ]);
+
+    $response = $this->get(route('countries.index', [
+        'region' => 'Test1',
+    ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+    $response->assertOk();
+    $response->assertSee('Countries not found.');
+});

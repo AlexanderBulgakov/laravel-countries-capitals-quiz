@@ -6,11 +6,11 @@ use App\Models\Country;
 use App\Models\Language;
 use App\Services\Country\CountryFilters;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class CountryController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $filters = CountryFilters::fromRequest($request);
 
@@ -42,12 +42,15 @@ class CountryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('countries.index', compact(
+        $view = view('countries.index', compact(
             'countries',
             'regions',
             'subregions',
             'languages',
             'filters'
         ));
+
+        return response($request->ajax() ? $view->fragment('results') : $view)
+            ->header('Vary', 'X-Requested-With');
     }
 }

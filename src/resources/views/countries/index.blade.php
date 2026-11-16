@@ -1,9 +1,18 @@
 @use ('App\Enums\Membership')
 <x-layout title="Countries">
     <h1 class="mb-6 text-2xl font-semibold">Countries</h1>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr]">
+    <div
+        x-data="countryFilters(@js(['region' => $filters->region ?? '']))"
+        class="grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr]"
+    >
         <aside>
-            <form method="GET" class="mb-6 flex flex-col gap-2">
+            <form
+                x-ref="form"
+                @submit.prevent="apply()"
+                @change="apply()"
+                method="GET"
+                class="mb-6 flex flex-col gap-2"
+            >
                 <a
                     href="{{ route('countries.index') }}"
                     class="cursor-pointer rounded bg-gray-900 px-4 py-2 text-center text-sm text-white transition-opacity hover:opacity-70"
@@ -14,6 +23,7 @@
                 <select
                     id="region"
                     name="region"
+                    @change="regionChanged($event)"
                     class="cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
                 >
                     <option value="">All regions</option>
@@ -31,11 +41,15 @@
                 <select
                     id="subregion"
                     name="subregion"
+                    x-ref="subregion"
                     class="cursor-pointer rounded border border-gray-900 bg-white px-4 py-2"
                 >
                     <option value="">All</option>
                     @foreach ($subregions as $region => $items)
-                        <optgroup label="{{ $region }}">
+                        <optgroup
+                            label="{{ $region }}"
+                            :disabled="region !== '' && region !== @js($region)"
+                        >
                             @foreach ($items as $item)
                                 <option
                                     value="{{ $item->subregion }}"
@@ -52,7 +66,9 @@
                     <summary class="mb-2 cursor-pointer">More filters</summary>
 
                     <div class="mb-2 flex flex-col gap-2">
-                        <label for="language" class="font-semibold">Language</label>
+                        <label for="language" class="font-semibold"
+                            >Language</label
+                        >
                         <select
                             id="language"
                             name="language"
@@ -173,7 +189,9 @@
                         <fieldset>
                             <legend class="font-semibold">Memberships</legend>
                             @foreach (Membership::cases() as $membership)
-                                <label class="cursor-poiner flex items-center gap-2">
+                                <label
+                                    class="flex cursor-pointer items-center gap-2"
+                                >
                                     <input
                                         type="checkbox"
                                         name="memberships[]"
@@ -195,32 +213,50 @@
                 </button>
             </form>
         </aside>
-
-        <div>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($countries as $country)
-                    <div class="rounded-md border border-gray-300 bg-white p-4">
-                        @if ($country->flag_url)
-                            <img
-                                src="{{ $country->flag_url }}"
-                                alt="Flag of {{ $country->name_common }}"
-                                class="mb-2 h-8 border border-gray-900"
-                            />
-                        @endif
-                        <div class="font-medium">
-                            {{ $country->name_common }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <strong>Region:</strong> {{ $country->region }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <strong>Capital(s):</strong>
-                            {{ $country->capitals->pluck('name')->join(', ') ?: '—' }}
-                        </div>
+        <div
+            x-ref="results"
+            @click="paginate($event)"
+            :class="{ 'opacity-50 pointer-events-none': loading }"
+        >
+            @fragment ('results')
+                @if ($countries->isNotEmpty())
+                    <div
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        @foreach ($countries as $country)
+                            <div
+                                class="rounded-md border border-gray-300 bg-white p-4"
+                            >
+                                @if ($country->flag_url)
+                                    <img
+                                        src="{{ $country->flag_url }}"
+                                        alt="Flag of {{ $country->name_common }}"
+                                        class="mb-2 h-8 border border-gray-900"
+                                    />
+                                @endif
+                                <div class="font-medium">
+                                    {{ $country->name_common }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    <strong>Region:</strong>
+                                    {{ $country->region }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    <strong>Capital(s):</strong>
+                                    {{ $country->capitals->pluck('name')->join(', ') ?: '—' }}
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="mt-6">{{ $countries->links() }}</div>
+                    <div class="mt-6" data-pagination>
+                        {{ $countries->links() }}
+                    </div>
+                @else
+                    <h2 class="text-center font-semibold">
+                        Countries not found.
+                    </h2>
+                @endif
+            @endfragment
         </div>
     </div>
 </x-layout>
