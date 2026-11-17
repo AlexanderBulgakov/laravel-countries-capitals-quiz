@@ -21,6 +21,8 @@ class CapitalFactory extends Factory
         return [
             'country_id' => Country::factory(),
             'name' => fake()->city(),
+            'lat' => fake()->latitude(),
+            'lng' => fake()->longitude(),
         ];
     }
 }

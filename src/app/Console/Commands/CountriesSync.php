@@ -113,6 +113,12 @@ class CountriesSync extends Command
                     'country_id' => $country->id,
                     'name' => $capitalData['name'],
                 ],
+                $this->verifyCoordinates(
+                    $country->name_common,
+                    $capitalData['name'],
+                    $capitalData['coordinates']['lat'] ?? null,
+                    $capitalData['coordinates']['lng'] ?? null
+                ),
             );
         }
 
@@ -151,5 +157,28 @@ class CountriesSync extends Command
     private function activeMemberships(array $memberships): array
     {
         return collect($memberships)->filter()->keys()->all();
+    }
+
+    /**
+     * @return array{}|array{lat: float, lng: float}
+     */
+    private function verifyCoordinates(string $country, string $capital, mixed $lat, mixed $lng): array
+    {
+        $valid = is_numeric($lat) && is_numeric($lng)
+            && $lat >= -90 && $lat <= 90
+            && $lng >= -180 && $lng <= 180;
+
+        if (! $valid) {
+            Log::warning('countries:sync: invalid coordinates', [
+                'country' => $country,
+                'capital' => $capital,
+                'lat' => $lat,
+                'lng' => $lng,
+            ]);
+
+            return [];
+        }
+
+        return ['lat' => (float) $lat, 'lng' => (float) $lng];
     }
 }

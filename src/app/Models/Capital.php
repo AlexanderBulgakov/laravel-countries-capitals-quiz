@@ -16,13 +16,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property string $name
+ * @property string|null $lat
+ * @property string|null $lng
  */
 class Capital extends Model
 {
     /** @use HasFactory<CapitalFactory> */
     use HasFactory;
 
-    protected $fillable = ['country_id', 'name'];
+    protected $fillable = ['country_id', 'name', 'lat', 'lng'];
 
     /**
      * The country this capital belongs to.

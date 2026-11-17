@@ -20,7 +20,10 @@ function countryFixture(
         ],
         'codes' => ['alpha_3' => $cca3],
         'capitals' => [
-            ['name' => 'Tirana'],
+            [
+                'name' => 'Tirana',
+                'coordinates' => ['lat' => 41.3275, 'lng' => 19.8187],
+            ],
         ],
         'flag' => ['url_svg' => 'https://flags.restcountries.com/v5/svg/al.svg'],
         'region' => 'Europe',
@@ -81,8 +84,8 @@ it('syncs countries and their capitals from the API', function () {
                     ],
                     'flag' => ['url_svg' => 'https://example.test/flag.svg'],
                     'capitals' => [
-                        ['name' => 'Pretoria'],
-                        ['name' => 'Cape Town'],
+                        ['name' => 'Pretoria', 'coordinates' => ['lat' => -25.7461, 'lng' => 28.1881]],
+                        ['name' => 'Cape Town', 'coordinates' => ['lat' => -33.9249, 'lng' => 18.4241]],
                     ],
                 ]],
                 'meta' => ['total' => 1, 'count' => 1, 'limit' => 100, 'offset' => 0, 'more' => false],
@@ -118,8 +121,8 @@ it('is idempotent — running sync twice updates instead of duplicating', functi
                     'descriptions' => ['short' => 'A republic at the southern tip of Africa.'],
                     'flag' => ['url_svg' => 'https://example.test/flag.svg'],
                     'capitals' => [
-                        ['name' => 'Pretoria'],
-                        ['name' => 'Cape Town'],
+                        ['name' => 'Pretoria', 'coordinates' => ['lat' => -25.7461, 'lng' => 28.1881]],
+                        ['name' => 'Cape Town', 'coordinates' => ['lat' => -33.9249, 'lng' => 18.4241]],
                     ],
                 ],
             ],
@@ -333,11 +336,241 @@ it('stores an empty subregion as null', function () {
 
     Http::fake([
         'api.restcountries.com/*' => Http::response(
-            apiPage([...countryFixture($uuid, 'Antarctica', 'ATA'), 'subregion' => '']),
+            apiPage([...countryFixture($uuid, 'Albania', 'ALB'), 'subregion' => '']),
         ),
     ]);
 
     $this->artisan('countries:sync')->assertExitCode(0);
 
     expect(Country::firstWhere('restcountries_uuid', $uuid)->subregion)->toBeNull();
+});
+
+it('saves the coordinates to the database', function () {
+    $uuid = (string) Str::uuid();
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::response(
+            apiPage(
+                [
+                    ...countryFixture(
+                        $uuid,
+                        'Albania',
+                        'ALB'
+                    ),
+                    'capitals' => [
+                        [
+                            'name' => 'Tirana',
+                            'coordinates' => ['lat' => 41.32, 'lng' => 19.82],
+                        ],
+                    ],
+                ]
+            ),
+        ),
+    ]);
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    $capital = Capital::firstWhere('name', 'Tirana');
+
+    expect(Capital::count())->toBe(1);
+    expect($capital->lat)->toBe('41.320000');
+    expect($capital->lng)->toBe('19.820000');
+});
+
+it('updates coordinates on re-sync instead of creating a duplicate', function () {
+    $uuid = (string) Str::uuid();
+
+    $apiFirst = apiPage(
+        [
+            ...countryFixture(
+                $uuid,
+                'Albania',
+                'ALB'
+            ),
+            'capitals' => [
+                [
+                    'name' => 'Tirana',
+                    'coordinates' => ['lat' => 41.32, 'lng' => 19.82],
+                ],
+            ],
+        ]
+    );
+
+    $apiUpdated = apiPage(
+        [
+            ...countryFixture(
+                $uuid,
+                'Albania',
+                'ALB'
+            ),
+            'capitals' => [
+                [
+                    'name' => 'Tirana',
+                    'coordinates' => ['lat' => 41.44, 'lng' => 19.12],
+                ],
+            ],
+        ]
+    );
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::sequence()
+            ->push($apiFirst, 200)
+            ->push($apiUpdated, 200),
+    ]);
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    $capital = Capital::firstWhere('name', 'Tirana');
+
+    expect(Capital::count())->toBe(1);
+    expect($capital->lat)->toBe('41.440000');
+    expect($capital->lng)->toBe('19.120000');
+});
+
+it('logs a warning and stores no coordinates for a new capital with invalid ones', function (?array $coordinates) {
+    $uuid = (string) Str::uuid();
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::response(
+            apiPage(
+                [
+                    ...countryFixture(
+                        $uuid,
+                        'Albania',
+                        'ALB'
+                    ),
+                    'capitals' => [
+                        [
+                            'name' => 'Tirana',
+                            'coordinates' => $coordinates,
+                        ],
+                    ],
+                ]
+            ),
+        ),
+    ]);
+
+    Log::spy();
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    Log::shouldHaveReceived('warning')
+        ->once()
+        ->with('countries:sync: invalid coordinates', [
+            'country' => 'Albania',
+            'capital' => 'Tirana',
+            'lat' => $coordinates['lat'] ?? null,
+            'lng' => $coordinates['lng'] ?? null,
+        ]);
+
+    $capitalDb = Capital::firstWhere('name', 'Tirana');
+
+    expect(Capital::count())->toBe(1);
+    expect($capitalDb->lat)->toBeNull();
+    expect($capitalDb->lng)->toBeNull();
+})->with([
+    'missing coordinates' => [null],
+    'lat out of range' => [['lat' => 999, 'lng' => 19.82]],
+    'lng out of range' => [['lat' => 41.32, 'lng' => -181]],
+    'non-numeric lat' => [['lat' => 'abc', 'lng' => 19.82]],
+]);
+
+it('accepts coordinates on the range boundaries', function (array $capital, mixed $lat, mixed $lng) {
+    $uuid = (string) Str::uuid();
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::response(
+            apiPage(
+                [
+                    ...countryFixture(
+                        $uuid,
+                        'Albania',
+                        'ALB'
+                    ),
+                    'capitals' => [
+                        $capital,
+                    ],
+                ]
+            ),
+        ),
+    ]);
+
+    Log::spy();
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    Log::shouldNotHaveReceived('warning');
+
+    $capitalDb = Capital::firstWhere('name', $capital['name']);
+
+    expect(Capital::count())->toBe(1);
+    expect($capitalDb->lat)->toBe($lat);
+    expect($capitalDb->lng)->toBe($lng);
+})->with([
+    '90 / 180' => [['name' => 'Tirana', 'coordinates' => ['lat' => 90, 'lng' => 180]], '90.000000', '180.000000'],
+    '-90/-180' => [['name' => 'Tirana', 'coordinates' => ['lat' => -90, 'lng' => -180]], '-90.000000', '-180.000000'],
+    '0/0' => [['name' => 'Tirana', 'coordinates' => ['lat' => 0, 'lng' => 0]], '0.000000', '0.000000'],
+]);
+
+it('keeps the last valid coordinates when a re-sync brings invalid ones', function () {
+    $uuid = (string) Str::uuid();
+
+    $apiFirst = apiPage(
+        [
+            ...countryFixture(
+                $uuid,
+                'Albania',
+                'ALB'
+            ),
+            'capitals' => [
+                [
+                    'name' => 'Tirana',
+                    'coordinates' => ['lat' => 41.32, 'lng' => 19.82],
+                ],
+            ],
+        ]
+    );
+
+    $apiWrong = apiPage(
+        [
+            ...countryFixture(
+                $uuid,
+                'Albania',
+                'ALB'
+            ),
+            'capitals' => [
+                [
+                    'name' => 'Tirana',
+                    'coordinates' => ['lat' => 543, 'lng' => 'abc'],
+                ],
+            ],
+        ]
+    );
+
+    Log::spy();
+
+    Http::fake([
+        'api.restcountries.com/*' => Http::sequence()
+            ->push($apiFirst, 200)
+            ->push($apiWrong, 200),
+    ]);
+
+    $this->artisan('countries:sync')->assertExitCode(0);
+    $this->artisan('countries:sync')->assertExitCode(0);
+
+    Log::shouldHaveReceived('warning')
+        ->once()
+        ->with('countries:sync: invalid coordinates', [
+            'country' => 'Albania',
+            'capital' => 'Tirana',
+            'lat' => 543,
+            'lng' => 'abc',
+        ]);
+
+    $capital = Capital::firstWhere('name', 'Tirana');
+
+    expect(Capital::count())->toBe(1);
+    expect($capital->lat)->toBe('41.320000');
+    expect($capital->lng)->toBe('19.820000');
 });

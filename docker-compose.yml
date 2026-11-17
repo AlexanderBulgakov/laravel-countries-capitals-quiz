@@ -1,27 +1,51 @@
+x-php: &php
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+  volumes:
+    - ./src:/var/www/html
+  environment:
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_DATABASE: ${POSTGRES_DB:-laravel}
+    DB_USERNAME: ${POSTGRES_USER:-laravel}
+    DB_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    REDIS_HOST: valkey
+    REDIS_PORT: 6379
+    CACHE_STORE: redis
+    SESSION_DRIVER: redis
+    QUEUE_CONNECTION: redis
+  depends_on:
+    db:
+      condition: service_healthy
+    valkey:
+      condition: service_started
+
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    volumes:
-      - ./src:/var/www/html
-    environment:
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: ${POSTGRES_DB:-laravel}
-      DB_USERNAME: ${POSTGRES_USER:-laravel}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-      REDIS_HOST: valkey
-      REDIS_PORT: 6379
-      CACHE_STORE: redis
-      SESSION_DRIVER: redis
-      QUEUE_CONNECTION: redis
+    <<: *php
+    healthcheck:
+      test: ["CMD-SHELL", "test -f vendor/autoload.php && grep -q '^APP_KEY=base64:' .env"]
+      interval: 5s
+      start_period: 5m
+      retries: 3
+
+  queue:
+    <<: *php
+    command: php artisan queue:work --sleep=3 --max-time=3600
+    restart: unless-stopped
     depends_on:
-      db:
+      app:
         condition: service_healthy
-      valkey:
-        condition: service_started
+
+  scheduler:
+    <<: *php
+    command: php artisan schedule:work
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine

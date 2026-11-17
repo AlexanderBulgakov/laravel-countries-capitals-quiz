@@ -1,4 +1,9 @@
 services:
+  app:
+    volumes:
+      - ./src:/var/www/html
+      - dev_home:/root
+
   mailpit:
     image: axllent/mailpit:latest
     ports:
@@ -13,3 +18,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+volumes:
+  dev_home:
