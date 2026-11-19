@@ -25,4 +25,9 @@ class CapitalFactory extends Factory
             'lng' => fake()->longitude(),
         ];
     }
+
+    public function nullLatLng(): static
+    {
+        return $this->state(['lat' => null, 'lng' => null]);
+    }
 }
