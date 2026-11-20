@@ -12,6 +12,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
+Route::get('/countries/{country}', [CountryController::class, 'show'])
+    ->whereNumber('country')
+    ->name('countries.show');
 
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
