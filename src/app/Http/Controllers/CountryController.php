@@ -62,6 +62,14 @@ class CountryController extends Controller
             'languages' => fn ($q) => $q->orderBy('name'),
         ]);
 
-        return view('countries.show', compact('country'));
+        $previous = Country::where('name_common', '<', $country->name_common)
+            ->orderBy('name_common', 'desc')
+            ->first();
+
+        $next = Country::where('name_common', '>', $country->name_common)
+            ->orderBy('name_common', 'asc')
+            ->first();
+
+        return view('countries.show', compact('country', 'previous', 'next'));
     }
 }

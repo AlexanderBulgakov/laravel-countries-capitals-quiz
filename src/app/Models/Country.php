@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Membership;
 use App\Services\Country\CountryFilters;
 use Database\Factories\CountryFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -118,5 +119,15 @@ class Country extends Model
         $query
             ->when($min !== null, fn ($q) => $q->where($column, '>=', $min))
             ->when($max !== null, fn ($q) => $q->where($column, '<=', $max));
+    }
+
+    /** @return list<Membership> */
+    public function knownMemberships(): array
+    {
+        return collect($this->memberships)
+            ->map(fn (string $key) => Membership::tryFrom($key))
+            ->filter()
+            ->values()
+            ->all();
     }
 }
