@@ -31,4 +31,13 @@ class CapitalWeatherFactory extends Factory
             'updated_at' => $now,
         ];
     }
+
+    public function stale(): static
+    {
+        return $this->state(function () {
+            $observedAt = now()->subHours(CapitalWeather::STALE_AFTER_HOURS + 1);
+
+            return ['observed_at' => $observedAt, 'updated_at' => $observedAt];
+        });
+    }
 }

@@ -1,4 +1,3 @@
-@use ('App\Enums\Membership')
 <x-layout title="{{ $country->name_common }}">
     <p class="mb-6">
         <a
@@ -18,56 +17,62 @@
         <p class="mb-6 font-semibold">{{ $country->descriptions_short }}</p>
     @endif
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div
-            class="mb-6 w-full rounded-xl border border-gray-200 p-4 shadow-sm sm:p-6"
-        >
-            @if ($country->flag_url)
+        @if ($country->flag_url)
+            <div
+                class="mb-6 w-full rounded-xl border border-gray-200 p-4 shadow-sm sm:p-6"
+            >
                 <img
                     src="{{ $country->flag_url }}"
                     alt="Flag of {{ $country->name_common }}"
                     class="mb-2 border border-gray-900"
                 />
-            @endif
-        </div>
+            </div>
+        @endif
         <div>
-            @foreach ( $country->capitals as $capital )
+            @foreach ($country->capitals as $capital)
                 <div
                     class="mb-6 w-full rounded-xl border border-gray-200 p-4 shadow-sm sm:p-6"
                 >
                     <h2 class="mb-3 text-lg font-semibold">
                         {{ $capital->name }}
                     </h2>
-                    @if ($capital->weather)
-                        <dl class="grid grid-cols-2 gap-x-4 gap-y-4">
+                    @php $weather = $capital->weather; @endphp
+                    @if ($weather)
+                        <dl
+                            @class (['grid grid-cols-2 gap-x-4 gap-y-4', 'opacity-50' => $weather->isStale()])
+                        >
                             <dt class="text-xs text-gray-500">
                                 Temperature (°C)
                             </dt>
                             <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->temperature_c }}
+                                {{ $weather->temperature_c }}
                             </dd>
                             <dt class="text-xs text-gray-500">
                                 Wind speed (km/h)
                             </dt>
                             <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->wind_speed_kmh }}
+                                {{ $weather->wind_speed_kmh }}
                             </dd>
                             <dt class="text-xs text-gray-500">Weather</dt>
                             <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->weather_code->label() }}
+                                {{ $weather->weather_code->label() }}
                             </dd>
                             <dt class="text-xs text-gray-500">Day/Night</dt>
                             <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->is_day ? 'Day' : 'Night' }}
+                                {{ $weather->is_day ? 'Day' : 'Night' }}
                             </dd>
-                            <dt class="text-xs text-gray-500">observed_at</dt>
+                            <dt class="text-xs text-gray-500">Updated</dt>
                             <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->observed_at }}
-                            </dd>
-                            <dt class="text-xs text-gray-500">updated_at</dt>
-                            <dd class="text-xs text-gray-500">
-                                {{ $capital->weather->updated_at }}
+                                <time
+                                    datetime="{{ $weather->observed_at->toIso8601String() }}"
+                                    title="{{ $weather->observed_at->format('Y-m-d H:i') }} UTC"
+                                    >{{ $weather->observed_at->diffForHumans() }}</time
+                                >
                             </dd>
                         </dl>
+                        @if ($weather->isStale())
+                            <p class="mt-6 text-sm font-semibold text-orange-500">Weather data may be outdated.</p>
+                        @endif
                     @else
                         <p class="text-sm text-gray-500">Weather unavailable</p>
                     @endif

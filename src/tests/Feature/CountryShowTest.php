@@ -173,3 +173,38 @@ it('shows only Previous on the last country', function () {
         ->assertSeeInOrder(['Previous', 'Bravo'])
         ->assertDontSee('Next');
 });
+
+it('shows fresh weather without the outdated warning', function () {
+    $this->freezeSecond();
+
+    $country = Country::factory()
+        ->has(
+            Capital::factory()->has(
+                CapitalWeather::factory()->state(['observed_at' => now()->subMinutes(25)]),
+                'weather'
+            )
+        )
+        ->create();
+
+    $this->get(route('countries.show', $country))
+        ->assertOk()
+        ->assertSee('25 minutes ago')
+        ->assertDontSee('may be outdated');
+});
+
+it('shows outdated weather with the outdated warning', function () {
+    $this->freezeSecond();
+
+    $country = Country::factory()
+        ->has(
+            Capital::factory()->has(
+                CapitalWeather::factory()->stale(), 'weather'
+            )
+        )
+        ->create();
+
+    $this->get(route('countries.show', $country))
+        ->assertOk()
+        ->assertSee((CapitalWeather::STALE_AFTER_HOURS + 1).' hours ago')
+        ->assertSee('may be outdated');
+});

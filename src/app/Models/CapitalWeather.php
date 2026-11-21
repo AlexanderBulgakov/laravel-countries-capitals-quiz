@@ -7,11 +7,18 @@ use Database\Factories\CapitalWeatherFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $observed_at
+ */
 class CapitalWeather extends Model
 {
     /** @use HasFactory<CapitalWeatherFactory> */
     use HasFactory;
+
+    // Sync runs hourly; normal max age ~75 min, one failed run ~135 min.
+    public const STALE_AFTER_HOURS = 3;
 
     protected $table = 'capital_weather';
 
@@ -41,5 +48,10 @@ class CapitalWeather extends Model
     public function capital(): BelongsTo
     {
         return $this->belongsTo(Capital::class);
+    }
+
+    public function isStale(): bool
+    {
+        return $this->observed_at->lt(now()->subHours(self::STALE_AFTER_HOURS));
     }
 }
