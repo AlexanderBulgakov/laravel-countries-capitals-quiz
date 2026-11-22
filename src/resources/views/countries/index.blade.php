@@ -224,8 +224,9 @@
                         class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                     >
                         @foreach ($countries as $country)
-                            <div
-                                class="rounded-md border border-gray-300 bg-white p-4"
+                            <a
+                                href="{{ route('countries.show', $country) }}"
+                                class="rounded-md border border-gray-300 bg-white p-4 transition-colors duration-300 hover:border-gray-900"
                             >
                                 @if ($country->flag_url)
                                     <img
@@ -234,18 +235,18 @@
                                         class="mb-2 h-8 border border-gray-900"
                                     />
                                 @endif
-                                <div class="font-medium">
+                                <span class="block font-medium">
                                     {{ $country->name_common }}
-                                </div>
-                                <div class="text-sm text-gray-500">
+                                </span>
+                                <span class="block text-sm text-gray-500">
                                     <strong>Region:</strong>
                                     {{ $country->region }}
-                                </div>
-                                <div class="text-sm text-gray-500">
+                                </span>
+                                <span class="block text-sm text-gray-500">
                                     <strong>Capital(s):</strong>
                                     {{ $country->capitals->pluck('name')->join(', ') ?: '—' }}
-                                </div>
-                            </div>
+                                </span>
+                            </a>
                         @endforeach
                     </div>
                     <div class="mt-6" data-pagination>

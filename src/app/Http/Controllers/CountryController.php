@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Services\Country\CountryFilters;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\View\View;
 
 class CountryController extends Controller
 {
@@ -52,5 +53,23 @@ class CountryController extends Controller
 
         return response($request->ajax() ? $view->fragment('results') : $view)
             ->header('Vary', 'X-Requested-With');
+    }
+
+    public function show(Country $country): View
+    {
+        $country->load([
+            'capitals' => fn ($q) => $q->orderBy('name')->with('weather'),
+            'languages' => fn ($q) => $q->orderBy('name'),
+        ]);
+
+        $previous = Country::where('name_common', '<', $country->name_common)
+            ->orderBy('name_common', 'desc')
+            ->first();
+
+        $next = Country::where('name_common', '>', $country->name_common)
+            ->orderBy('name_common', 'asc')
+            ->first();
+
+        return view('countries.show', compact('country', 'previous', 'next'));
     }
 }

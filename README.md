@@ -1,14 +1,14 @@
 # Countries & Capitals Quiz
 
 A country/capital guessing quiz built with Laravel — global leaderboard,
-increasing difficulty levels, live weather and currency data for capitals.
+increasing difficulty levels, live weather data for capitals.
 A learning/portfolio project focused on backend fundamentals: external API
 sync, queues and scheduling, caching, and tests.
 
 ![CI](https://github.com/AlexanderBulgakov/laravel-countries-capitals-quiz/actions/workflows/ci.yml/badge.svg)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> 🚧 **Work in progress.** 6/10 phases complete. Not feature-complete yet —
+> 🚧 **Work in progress.** 7/9 phases complete. Not feature-complete yet —
 > see commit history for current progress.
 
 The quiz is playable end to end, for guests and registered users alike:
@@ -26,7 +26,13 @@ The country catalog at `/countries` supports combined filters: region and
 subregion, population/area/density ranges, sovereignty, spoken language,
 and international memberships (UN, EU, NATO…). Filters apply without a
 page reload (Alpine.js + Blade fragments), and the URL stays clean and
-shareable. External data (weather/currency) is not built yet.
+shareable.
+
+Each country has its own page with key facts and the current weather in
+its capital(s), fetched from Open-Meteo. A scheduled command syncs all
+capitals hourly through a queued job batch (chunks of 50 per request,
+retries with backoff); the page shows how fresh the data is ("updated
+25 minutes ago") and dims it when a sync has been missed.
 
 **Development approach:** built with Claude Code as a pairing/mentoring
 tool. The first two phases of code started as solutions proposed by Claude
@@ -80,7 +86,17 @@ shifted to a mentoring role — advising rather than writing code.
      Idempotent — safe to re-run any time; existing data stays untouched
      if the API is unavailable.
 
-4. Open <http://localhost> (port configurable via `APP_PORT` in `.env`).
+4. Fetch the weather for capitals (no API key needed; requires the countries
+   data from the previous step):
+
+   ```
+   docker compose exec app php artisan weather:sync
+   ```
+
+   This dispatches a batch of queued jobs, processed by the `queue` service.
+   After that, the `scheduler` service repeats the sync hourly on its own.
+
+5. Open <http://localhost> (port configurable via `APP_PORT` in `.env`).
 
 ## Running tests
 
@@ -101,7 +117,11 @@ docker compose exec app php artisan test
 
 - `docker-compose.yml` — `app`, `nginx`, `db` (PostgreSQL), `valkey` (Redis-protocol
   compatible, BSD-licensed — Laravel still uses the `redis` driver/client),
-  `node` (Vite dev server for frontend assets, port `5173`).
+  `node` (Vite dev server for frontend assets, port `5173`), `queue`
+  (`queue:work`) and `scheduler` (`schedule:work`). `queue` and `scheduler`
+  reuse the `app` service definition via a YAML anchor and start only after
+  `app` is healthy (dependencies installed, `APP_KEY` generated) — otherwise
+  they would race the first-run bootstrap.
 - `docker-compose.override.yml` — local-dev-only additions, auto-merged by
   `docker compose up` with no extra flags needed: `mailpit` (catches
   outgoing email locally — web UI on port `8025`, SMTP on `1025` — instead
